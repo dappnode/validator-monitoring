@@ -15,18 +15,22 @@ COPY src/ ./src/
 # Set the Current Working Directory inside the container to the src directory.
 WORKDIR /app/src
 
-# Build the application.
-RUN CGO_ENABLED=0 GOOS=linux go build -v -o ../listener main.go
+# Build the application, outputting the executable to /bin directory.
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o /bin/listener main.go
 
 # Use a Docker multi-stage build to create a lean production image.
-# https://docs.docker.com/develop/develop-images/multistage-build/
-FROM debian:buster-slim
-RUN set -eux; apt-get update; apt-get install -y --no-install-recommends ca-certificates netbase
+FROM debian:bookworm-slim
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates netbase; \
+    # Remove apt cache to reduce image size.
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 
 # Copy the pre-built binary file from the previous stage.
-COPY --from=builder /app/listener /listener
+COPY --from=builder /bin/listener /listener
 
 # Command to run the executable
 CMD ["/listener"]
