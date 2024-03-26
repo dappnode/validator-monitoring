@@ -6,3 +6,25 @@ services:
       context: listener
     ports:
       - "8080:8080"
+    environment:
+      MONGO_DB_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017"
+      MONGO_DB_NAME: "${MONGO_DB_NAME}"
+      API_PORT: "${API_PORT}"
+    depends_on:
+      - mongo 
+
+  mongo:
+    image: "mongo:7.0.6"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-config:/etc/mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: "${MONGO_DB_NAME}"
+    command: ["mongod", "--config", "/etc/mongo/mongod.conf"]
+
+volumes:
+  mongo-data:
