@@ -9,11 +9,11 @@ import (
 type LogLevel int
 
 const (
-	DEBUG LogLevel = iota
-	INFO
-	WARN
-	ERROR
-	FATAL
+	DEBUG LogLevel = iota // implicitly set to 0
+	INFO                  // implicitly set to 1
+	WARN                  // implicitly set to 2
+	ERROR                 // implicitly set to 3
+	FATAL                 // implicitly set to 4
 )
 
 var (
@@ -26,27 +26,23 @@ func SetLogLevelFromString(level string) {
 	switch level {
 	case "DEBUG":
 		logLevel = DEBUG
-		break
 	case "INFO":
 		logLevel = INFO
-		break
 	case "WARN":
 		logLevel = WARN
-		break
 	case "ERROR":
 		logLevel = ERROR
-		break
 	case "FATAL":
 		logLevel = FATAL
-		break
 	default:
 		logLevel = INFO
-		Info("log level not properly set, use default INFO")
+		Info("log level not properly set, using default INFO")
 	}
 }
 
 func logWithPrefix(prefix, msg string) {
-	l.SetPrefix(prefix)
+	currentTimeFormat := time.Now().Format("2006-01-02 15:04:05")
+	l.SetPrefix(currentTimeFormat + prefix)
 	l.Println(msg)
 }
 
@@ -77,5 +73,6 @@ func Error(msg string) {
 func Fatal(msg string) {
 	if logLevel <= FATAL {
 		logWithPrefix(timeFormat+" [FATAL] ", msg)
+		os.Exit(1) // terminate the program with an error when Fatal is called
 	}
 }
