@@ -1,10 +1,12 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 
 	"github.com/dappnode/validator-monitoring/listener/src/types"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (s *httpApi) handleRoot(w http.ResponseWriter, r *http.Request) {
@@ -28,10 +30,45 @@ func (s *httpApi) handleSignature(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate the signature
-	if !validateSignature(req.Payload, req.Signature) {
+	if !validateSignature(req.Signature) {
 		s.respondError(w, http.StatusBadRequest, "Invalid signature")
 		return
 	}
+
+	// Decode BASE64 payload
+	decodedBytes, err := base64.StdEncoding.DecodeString(req.Payload)
+	if err != nil {
+		s.respondError(w, http.StatusBadRequest, "Invalid BASE64 payload")
+		return
+	}
+	var decodedPayload types.DecodedPayload
+	err = json.Unmarshal(decodedBytes, &decodedPayload)
+	if err != nil {
+		s.respondError(w, http.StatusBadRequest, "Invalid payload format")
+		return
+	}
+
+	// Validate the decoded payload (maybe we should be more strict here)
+	if decodedPayload.Platform != "dappnode" || decodedPayload.Timestamp == "" || decodedPayload.Pubkey == "" {
+		s.respondError(w, http.StatusBadRequest, "Payload content is invalid")
+		return
+	}
+
+	// Insert into MongoDB
+	_, err = s.dbCollection.InsertOne(r.Context(), bson.M{
+		"platform":  decodedPayload.Platform,
+		"timestamp": decodedPayload.Timestamp,
+		"pubkey":    decodedPayload.Pubkey,
+		"signature": req.Signature,
+		"network":   req.Network,
+		"label":     req.Label,
+	})
+	if err != nil {
+		s.respondError(w, http.StatusInternalServerError, "Failed to insert payload into MongoDB")
+		return
+	}
+
+	s.respondOK(w, "Payload validated and inserted into MongoDB")
 
 }
 
