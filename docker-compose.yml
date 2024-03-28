@@ -10,6 +10,7 @@ services:
       MONGO_DB_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017"
       MONGO_DB_NAME: "${MONGO_DB_NAME}"
       API_PORT: "${API_PORT}"
+      LOG_LEVEL: "${LOG_LEVEL}"
     depends_on:
       - mongo 
 
