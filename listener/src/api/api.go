@@ -66,7 +66,9 @@ func (s *httpApi) SetupRouter() *mux.Router {
 
 	// Endpoints
 	r.HandleFunc("/", s.handleRoot).Methods(http.MethodGet)
-	r.HandleFunc("/signature", s.handleSignature).Methods(http.MethodPost)
+	r.HandleFunc("/newSignature", s.handleSignature).Methods(http.MethodPost)
+	r.HandleFunc("/signaturesByValidator", s.handleGetSignatures).Methods(http.MethodPost)
+	r.HandleFunc("/signaturesByValidatorAggr", s.handleGetSignaturesAggr).Methods(http.MethodPost)
 
 	// Middlewares
 	// r.Use(corsmiddleware()))

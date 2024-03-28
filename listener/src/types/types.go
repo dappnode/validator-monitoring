@@ -17,3 +17,8 @@ type HttpErrorResp struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
+
+type SignaturesRequest struct {
+	Pubkey  string `json:"pubkey"`
+	Network string `json:"network"`
+}
