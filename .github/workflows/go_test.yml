@@ -20,8 +20,7 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v3
 
-    - name: Get dependencies
-      run: go mod download
-
     - name: Build
-      run: go build -v ./... # this will build all packages of this directory and subdirectories
+      run: |
+        cd ./listener
+        go build -a -installsuffix cgo -o bin/listener ./src
