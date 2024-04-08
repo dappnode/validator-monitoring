@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-
+	logger.Info("Starting listener")
 	// Load config
 	config, err := config.LoadConfig()
 	if err != nil {

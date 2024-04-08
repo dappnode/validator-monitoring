@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  listener:
+    extends:
+      file: docker-compose.yml
+      service: listener
+    build:
+      context: listener
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./listener/src:/app/src
+
+  mongo:
+    extends:
+      file: docker-compose.yml
+      service: mongo
+
+  ui:
+    extends:
+      file: docker-compose.yml
+      service: ui
+
+volumes:
+  mongo-data:
