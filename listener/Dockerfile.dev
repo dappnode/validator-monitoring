@@ -1,0 +1,35 @@
+# Start from the latest golang base image
+FROM golang:1.22.0-alpine3.19
+
+# Set the Current Working Directory inside the container.
+WORKDIR /app
+
+# Install system dependencies required for Air and your application
+RUN apk add --no-cache git
+
+# Install Air
+RUN go install github.com/cosmtrek/air@latest
+
+# Copy the Air configuration file (if you have one) into the container.
+# If you don't have a custom .air.toml, you can skip this step,
+# and Air will use its default configuration.
+# COPY .air.toml . (Uncomment if you have a custom Air config)
+
+# Copy go module files.
+COPY go.mod .
+COPY go.sum .
+
+# Download dependencies.
+# Doing this before copying the entire source code 
+# utilizes Docker's cache to speed up builds.
+RUN go mod download
+
+# Expect source code to be mounted at this directory rather than copied
+# This is the change for development mode.
+VOLUME ["/app/src"]
+
+# Set the Current Working Directory inside the container to the src directory.
+WORKDIR /app/src
+
+# Command to run the application using Air for live reloading.
+CMD ["air"]
