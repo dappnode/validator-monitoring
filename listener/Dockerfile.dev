@@ -13,7 +13,7 @@ RUN go install github.com/cosmtrek/air@latest
 # Copy the Air configuration file (if you have one) into the container.
 # If you don't have a custom .air.toml, you can skip this step,
 # and Air will use its default configuration.
-# COPY .air.toml . (Uncomment if you have a custom Air config)
+COPY .air.toml .
 
 # Copy go module files.
 COPY go.mod .
@@ -30,4 +30,4 @@ VOLUME ["/app/cmd"]
 VOLUME ["/app/internal"]
 
 # Command to run the application using Air for live reloading.
-CMD ["air"]
+CMD ["air", "-c", ".air.toml"]

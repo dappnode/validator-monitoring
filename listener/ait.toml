@@ -1,0 +1,15 @@
+# .air.toml
+root = "."
+tmp_dir = "tmp"
+
+[[build]]
+  # The '-o' flag specifies the output binary name and location
+  cmd = "go build -o ./tmp/listener ./cmd/listener/main.go"
+  bin = "tmp/listener"
+  # Include any additional build flags, such as '-v' for verbose output, if desired
+
+[log]
+  time_format = "15:04:05"
+
+[restart]
+  delay = 1000 # Milliseconds delay before restarting on file changes
