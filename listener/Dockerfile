@@ -9,14 +9,12 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 
-# Copy the source code into the container.
-COPY src/ ./src/
-
-# Set the Current Working Directory inside the container to the src directory.
-WORKDIR /app/src
+## The code is in the current dir under internal and cmd Copy them and set the required workdir
+COPY internal/ ./internal/
+COPY cmd/ ./cmd/
 
 # Build the application, outputting the executable to /bin directory.
-RUN CGO_ENABLED=0 GOOS=linux go build -v -o /bin/listener main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o /bin/listener ./cmd/listener/main.go
 
 # Use a Docker multi-stage build to create a lean production image.
 FROM debian:bookworm-slim

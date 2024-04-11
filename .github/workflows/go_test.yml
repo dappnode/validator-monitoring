@@ -23,4 +23,4 @@ jobs:
     - name: Build
       run: |
         cd ./listener
-        go build -a -installsuffix cgo -o bin/listener ./src
+        go build -a -installsuffix cgo -o bin/listener ./cmd/listener

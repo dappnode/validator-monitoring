@@ -26,10 +26,8 @@ RUN go mod download
 
 # Expect source code to be mounted at this directory rather than copied
 # This is the change for development mode.
-VOLUME ["/app/src"]
-
-# Set the Current Working Directory inside the container to the src directory.
-WORKDIR /app/src
+VOLUME ["/app/cmd"]
+VOLUME ["/app/internal"]
 
 # Command to run the application using Air for live reloading.
 CMD ["air"]
