@@ -1,12 +1,12 @@
-# .air.toml
+# Sample .air.toml configuration
 root = "."
 tmp_dir = "tmp"
 
-[[build]]
-  # The '-o' flag specifies the output binary name and location
+[build]
   cmd = "go build -o ./tmp/listener ./cmd/listener/main.go"
   bin = "tmp/listener"
-  # Include any additional build flags, such as '-v' for verbose output, if desired
+  full_bin = "tmp/listener"
+  # Include other configurations as necessary
 
 [log]
   time_format = "15:04:05"
