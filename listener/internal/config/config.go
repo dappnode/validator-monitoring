@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 
-	"github.com/dappnode/validator-monitoring/listener/src/logger"
+	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 )
 
 // Config is the struct that holds the configuration of the application

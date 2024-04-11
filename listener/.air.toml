@@ -1,0 +1,15 @@
+# Sample .air.toml configuration
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/listener ./cmd/listener/main.go"
+  bin = "tmp/listener"
+  full_bin = "tmp/listener"
+  # Include other configurations as necessary
+
+[log]
+  time_format = "15:04:05"
+
+[restart]
+  delay = 1000 # Milliseconds delay before restarting on file changes

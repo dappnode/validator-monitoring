@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/dappnode/validator-monitoring/listener/src/api"
-	"github.com/dappnode/validator-monitoring/listener/src/config"
-	"github.com/dappnode/validator-monitoring/listener/src/logger"
+	"github.com/dappnode/validator-monitoring/listener/internal/api"
+	"github.com/dappnode/validator-monitoring/listener/internal/config"
+	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 )
 
 func main() {

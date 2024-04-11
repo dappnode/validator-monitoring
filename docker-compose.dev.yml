@@ -9,7 +9,8 @@ services:
       context: listener
       dockerfile: Dockerfile.dev
     volumes:
-      - ./listener/src:/app/src
+      - ./listener/cmd:/app/cmd
+      - ./listener/internal:/app/internal
 
   mongo:
     extends:
