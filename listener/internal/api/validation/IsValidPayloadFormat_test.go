@@ -4,12 +4,10 @@ import "testing"
 
 // TestIsValidPayloadFormatValid tests IsValidPayloadFormat with a valid signature
 func TestIsValidPayloadFormatValid(t *testing.T) {
-	// Generate a valid signature
-	validSignature := "0x" + "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2a3b4c5d6e7f8g9h"
-	if len(validSignature) != 194 { // ensure the test signature length is correct
-		t.Fatal("Test setup error: The valid signature does not meet the length requirement.")
-	}
-
+	// Generate a valid signature with exactly 194 characters which starts with 0x
+	validSignature := "0x" + "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2a3b4c5d6e7f8g9ferght4y5htrynthrtgefghrtyhrtfrg4656htfregw4h3567jyeh4tgw4gerfwagthry5ju6r"
+	// print the length of the valid signature
+	t.Log(len(validSignature))
 	// Call the function with a valid signature
 	if !IsValidPayloadFormat(validSignature) {
 		t.Errorf("IsValidPayloadFormat was incorrect, got: false, want: true.")
