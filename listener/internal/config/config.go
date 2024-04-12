@@ -14,6 +14,8 @@ type Config struct {
 	MongoDBURI string
 	// LogLevel is the level of logging
 	LogLevel string
+	// BeaconNodeURL is the URL of the beacon node
+	BeaconNodeURL string
 }
 
 func LoadConfig() (*Config, error) {
@@ -34,9 +36,15 @@ func LoadConfig() (*Config, error) {
 		logger.Fatal("API_PORT is not set")
 	}
 
+	beaconNodeURL := os.Getenv("BEACON_NODE_URL")
+	if beaconNodeURL == "" {
+		logger.Fatal("BEACON_NODE_URL is not set")
+	}
+
 	return &Config{
-		Port:       apiPort,
-		MongoDBURI: mongoDBURI,
-		LogLevel:   logLevel,
+		Port:          apiPort,
+		MongoDBURI:    mongoDBURI,
+		LogLevel:      logLevel,
+		BeaconNodeURL: beaconNodeURL,
 	}, nil
 }
