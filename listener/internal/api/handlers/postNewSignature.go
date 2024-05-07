@@ -99,7 +99,7 @@ func validateAndInsertSignature(req types.SignatureRequestDecoded, dbCollection 
 // 1. Decode and validate
 // 2. Get active validators
 // 3. Validate signature and insert into MongoDB
-func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrl string) {
+func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[string]string) {
 	logger.Debug("Received new POST '/newSignature' request")
 
 	// Decode and validate incoming requests
@@ -116,12 +116,8 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		return
 	}
 
-	// Get active validators
-	requestsWithActiveValidators, err := validation.GetActiveValidators(validRequests, beaconNodeUrl)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to validate active validators")
-		return
-	}
+	// Get active validators (not throws only takes active validators)
+	requestsWithActiveValidators := validation.GetActiveValidators(validRequests, beaconNodeUrls)
 	// Respond with an error if no active validators were found
 	if len(requestsWithActiveValidators) == 0 {
 		respondError(w, http.StatusInternalServerError, "No active validators found in request")

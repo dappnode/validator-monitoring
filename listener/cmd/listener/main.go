@@ -18,7 +18,7 @@ func main() {
 	s := api.NewApi(
 		config.Port,
 		config.MongoDBURI,
-		config.BeaconNodeURL,
+		config.BeaconNodeURLs,
 	)
 
 	s.Start()

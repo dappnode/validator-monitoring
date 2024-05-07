@@ -14,8 +14,8 @@ type Config struct {
 	MongoDBURI string
 	// LogLevel is the level of logging
 	LogLevel string
-	// BeaconNodeURL is the URL of the beacon node
-	BeaconNodeURL string
+	// BeaconNodeURLs is the URLs of the beacon nodes for different networks
+	BeaconNodeURLs map[string]string
 }
 
 func LoadConfig() (*Config, error) {
@@ -41,10 +41,38 @@ func LoadConfig() (*Config, error) {
 		logger.Fatal("BEACON_NODE_URL is not set")
 	}
 
+	// beacon node urls per network
+
+	beaconMainnet := os.Getenv("BEACON_NODE_URL_MAINNET")
+	if beaconMainnet == "" {
+		logger.Fatal("BEACON_NODE_URL_MAINNET is not set")
+	}
+	beaconHolesky := os.Getenv("BEACON_NODE_URL_HOLESKY")
+	if beaconHolesky == "" {
+		logger.Fatal("BEACON_NODE_URL_HOLESKY is not set")
+	}
+
+	beaconGnosis := os.Getenv("BEACON_NODE_URL_GNOSIS")
+	if beaconGnosis == "" {
+		logger.Fatal("BEACON_NODE_URL_GNOSIS is not set")
+	}
+
+	beaconLukso := os.Getenv("BEACON_NODE_URL_LUKSO")
+	if beaconLukso == "" {
+		logger.Fatal("BEACON_NODE_URL_LUKSO is not set")
+	}
+
+	beaconNodeURLs := map[string]string{
+		"mainnet": beaconMainnet,
+		"holesky": beaconHolesky,
+		"gnosis":  beaconGnosis,
+		"lukso":   beaconLukso,
+	}
+
 	return &Config{
-		Port:          apiPort,
-		MongoDBURI:    mongoDBURI,
-		LogLevel:      logLevel,
-		BeaconNodeURL: beaconNodeURL,
+		Port:           apiPort,
+		MongoDBURI:     mongoDBURI,
+		LogLevel:       logLevel,
+		BeaconNodeURLs: beaconNodeURLs,
 	}, nil
 }

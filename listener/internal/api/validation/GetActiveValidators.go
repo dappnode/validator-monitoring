@@ -11,55 +11,76 @@ import (
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 )
 
-func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrl string) ([]types.SignatureRequestDecoded, error) {
+func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrls map[string]string) []types.SignatureRequestDecoded {
 	if len(requestsDecoded) == 0 {
-		return nil, fmt.Errorf("no validators to check")
+		fmt.Println("no requests to process")
+		return nil
 	}
 
-	// Prepare the request body
-	ids := make([]string, 0, len(requestsDecoded))
-	for _, req := range requestsDecoded {
-		ids = append(ids, req.DecodedPayload.Pubkey)
-	}
-	requestBody := struct {
-		Ids      []string `json:"ids"`
-		Statuses []string `json:"statuses"`
-	}{
-		Ids:      ids,
-		Statuses: []string{"active_ongoing"},
-	}
-
-	// Serialize the request body to JSON
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling request body: %w", err)
-	}
-
-	// Configure HTTP client with timeout
-	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/eth/v1/beacon/states/head/validators", beaconNodeUrl)
-	resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, fmt.Errorf("error making API call to %s: %w", url, err)
-	}
-	defer resp.Body.Close()
-
-	// Check the HTTP response status before reading the body
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API call to %s returned status %d", url, resp.StatusCode)
-	}
-
-	// Read and log the response body
-	responseData, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response data: %w", err)
-	}
-
-	// Assuming the server returns a list of active validators in the format you expect
 	var activeValidators []types.SignatureRequestDecoded
-	if err := json.Unmarshal(responseData, &activeValidators); err != nil {
-		return nil, fmt.Errorf("error unmarshaling response data: %w", err)
+
+	// iterate over the networks available in the beaconNodeUrls map
+	for network, url := range beaconNodeUrls {
+		// prepare request body, get the list of ids from the requestsDecoded for the current network
+		idss := make([]string, 0, len(requestsDecoded))
+		for _, req := range requestsDecoded {
+			if req.Network == network {
+				idss = append(idss, req.DecodedPayload.Pubkey)
+			}
+		}
+		// if there are no ids for the current network, log and skip it
+		if len(idss) == 0 {
+			fmt.Printf("no ids for network %s\n", network)
+			continue
+		}
+
+		// serialize the request body to JSON
+		jsonData, err := json.Marshal(struct {
+			Ids      []string `json:"ids"`
+			Statuses []string `json:"statuses"`
+		}{
+			Ids:      idss,
+			Statuses: []string{"active_ongoing"},
+		})
+		if err != nil {
+			fmt.Printf("error marshaling request data: %v\n", err)
+			continue
+		}
+
+		// configure HTTP client with timeout
+		client := &http.Client{Timeout: 10 * time.Second}
+		url := fmt.Sprintf("%s/eth/v1/beacon/states/head/validators", url)
+		resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		if err != nil {
+			fmt.Printf("error making API call to %s: %v\n", url, err)
+			continue
+		}
+
+		// check the HTTP response status before reading the body
+		if resp.StatusCode != http.StatusOK {
+			fmt.Printf("unexpected response status: %d\n", resp.StatusCode)
+			continue
+		}
+
+		// read and log the response body
+		responseData, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Printf("error reading response data: %v\n", err)
+			continue
+		}
+
+		// assuming the server returns a list of active validators in the format expected
+		if err := json.Unmarshal(responseData, &activeValidators); err != nil {
+			fmt.Printf("error unmarshaling response data: %v\n", err)
+			continue
+		}
+
+		// append the active validators to the list
+		activeValidators = append(activeValidators, activeValidators...)
+
+		// close the response body
+		resp.Body.Close()
 	}
 
-	return activeValidators, nil
+	return activeValidators
 }

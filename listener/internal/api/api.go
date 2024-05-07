@@ -9,18 +9,18 @@ import (
 )
 
 type httpApi struct {
-	server        *http.Server
-	port          string
-	dbUri         string
-	beaconNodeUrl string
+	server         *http.Server
+	port           string
+	dbUri          string
+	beaconNodeUrls map[string]string
 }
 
 // create a new api instance
-func NewApi(port string, mongoDbUri string, beaconNodeUrl string) *httpApi {
+func NewApi(port string, mongoDbUri string, beaconNodeUrls map[string]string) *httpApi {
 	return &httpApi{
-		port:          port,
-		dbUri:         mongoDbUri,
-		beaconNodeUrl: beaconNodeUrl,
+		port:           port,
+		dbUri:          mongoDbUri,
+		beaconNodeUrls: beaconNodeUrls,
 	}
 }
 
@@ -49,7 +49,7 @@ func (s *httpApi) Start() {
 	// setup the http api
 	s.server = &http.Server{
 		Addr:    ":" + s.port,
-		Handler: routes.SetupRouter(dbCollection, s.beaconNodeUrl),
+		Handler: routes.SetupRouter(dbCollection, s.beaconNodeUrls),
 	}
 
 	// start the api

@@ -8,14 +8,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrl string) *mux.Router {
+func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[string]string) *mux.Router {
 	r := mux.NewRouter()
 
 	// Define routes
 	r.HandleFunc("/", handlers.GetHealthCheck).Methods(http.MethodGet)
 	// closure function to inject dbCollection into the handler
 	r.HandleFunc("/newSignature", func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostNewSignature(w, r, dbCollection, beaconNodeUrl)
+		handlers.PostNewSignature(w, r, dbCollection, beaconNodeUrls)
 	}).Methods(http.MethodPost)
 	r.HandleFunc("/signaturesByValidator", func(w http.ResponseWriter, r *http.Request) {
 		handlers.PostSignaturesByValidator(w, r, dbCollection)
