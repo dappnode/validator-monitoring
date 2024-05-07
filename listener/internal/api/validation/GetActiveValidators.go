@@ -35,6 +35,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 		}
 
 		// serialize the request body to JSON
+		// see https://ethereum.github.io/beacon-APIs/#/Beacon/postStateValidators
 		jsonData, err := json.Marshal(struct {
 			Ids      []string `json:"ids"`
 			Statuses []string `json:"statuses"`
@@ -48,7 +49,8 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 		}
 
 		// configure HTTP client with timeout
-		client := &http.Client{Timeout: 10 * time.Second}
+		// TODO: test timeout
+		client := &http.Client{Timeout: 50 * time.Second}
 		url := fmt.Sprintf("%s/eth/v1/beacon/states/head/validators", url)
 		resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
@@ -70,6 +72,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 		}
 
 		// assuming the server returns a list of active validators in the format expected
+		// TODO: get data type an unmarshall to that type
 		if err := json.Unmarshal(responseData, &activeValidators); err != nil {
 			fmt.Printf("error unmarshaling response data: %v\n", err)
 			continue
