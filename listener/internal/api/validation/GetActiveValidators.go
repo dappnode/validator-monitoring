@@ -22,14 +22,14 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	// iterate over the networks available in the beaconNodeUrls map
 	for network, url := range beaconNodeUrls {
 		// prepare request body, get the list of ids from the requestsDecoded for the current network
-		idss := make([]string, 0, len(requestsDecoded))
+		ids := make([]string, 0, len(requestsDecoded))
 		for _, req := range requestsDecoded {
 			if req.Network == network {
-				idss = append(idss, req.DecodedPayload.Pubkey)
+				ids = append(ids, req.DecodedPayload.Pubkey)
 			}
 		}
 		// if there are no ids for the current network, log and skip it
-		if len(idss) == 0 {
+		if len(ids) == 0 {
 			fmt.Printf("no ids for network %s\n", network)
 			continue
 		}
@@ -39,7 +39,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 			Ids      []string `json:"ids"`
 			Statuses []string `json:"statuses"`
 		}{
-			Ids:      idss,
+			Ids:      ids,
 			Statuses: []string{"active_ongoing"},
 		})
 		if err != nil {
