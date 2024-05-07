@@ -9,7 +9,7 @@ import (
 func TestGetActiveValidators(t *testing.T) {
 	// Setup the input data
 	beaconNodeUrls := map[string]string{
-		"holesky": "https://test.53650f79ab75c6ff.dyndns.dappnode.io/",
+		"holesky": "https://holeskyvals.53650f79ab75c6ff.dyndns.dappnode.io",
 	}
 
 	requestsDecoded := []types.SignatureRequestDecoded{

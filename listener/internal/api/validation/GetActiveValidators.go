@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -22,7 +21,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	// iterate over the networks available in the beaconNodeUrls map
 	for network, url := range beaconNodeUrls {
 		// prepare request body, get the list of ids from the requestsDecoded for the current network
-		ids := make([]string, 0, len(requestsDecoded))
+		ids := make([]string, 0)
 		for _, req := range requestsDecoded {
 			if req.Network == network {
 				ids = append(ids, req.DecodedPayload.Pubkey)
@@ -51,12 +50,13 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 		// configure HTTP client with timeout
 		// TODO: test timeout
 		client := &http.Client{Timeout: 50 * time.Second}
-		url := fmt.Sprintf("%s/eth/v1/beacon/states/head/validators", url)
-		resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		apiUrl := fmt.Sprintf("%s/eth/v1/beacon/states/head/validators", url)
+		resp, err := client.Post(apiUrl, "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			fmt.Printf("error making API call to %s: %v\n", url, err)
+			fmt.Printf("error making API call to %s: %v\n", apiUrl, err)
 			continue
 		}
+		defer resp.Body.Close() // close the response body when the function returns
 
 		// check the HTTP response status before reading the body
 		if resp.StatusCode != http.StatusOK {
@@ -64,26 +64,29 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 			continue
 		}
 
-		// read and log the response body
-		responseData, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Printf("error reading response data: %v\n", err)
+		// Decode the API response directly into the ApiResponse struct
+		var apiResponse types.ActiveValidatorsApiResponse
+		if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
+			fmt.Printf("error decoding response data: %v\n", err)
 			continue
 		}
 
-		// assuming the server returns a list of active validators in the format expected
-		// TODO: get data type an unmarshall to that type
-		if err := json.Unmarshal(responseData, &activeValidators); err != nil {
-			fmt.Printf("error unmarshaling response data: %v\n", err)
-			continue
+		// Map to store validator public keys for quick lookup
+		validatorPubKeys := make(map[string]bool)
+		for _, data := range apiResponse.Data {
+			validatorPubKeys[data.Validator.Pubkey] = true
 		}
 
-		// append the active validators to the list
-		activeValidators = append(activeValidators, activeValidators...)
-
-		// close the response body
-		resp.Body.Close()
+		// Build the list of active validators for the current network
+		// by filtering the requestsDecoded slice. This is done by checking
+		// if the pubkey of each request is present in the validatorPubKeys map.
+		for _, req := range requestsDecoded {
+			if req.Network == network {
+				if _, exists := validatorPubKeys[req.DecodedPayload.Pubkey]; exists {
+					activeValidators = append(activeValidators, req)
+				}
+			}
+		}
 	}
-
 	return activeValidators
 }
