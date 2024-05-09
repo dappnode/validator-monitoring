@@ -29,7 +29,7 @@ services:
       context: web3signer/signer
       dockerfile: Dockerfile
     networks:
-      monitoring_dev_network:
+      dncore_network:
         aliases:
           - web3signer.web3signer.dappnode
 
@@ -38,7 +38,7 @@ services:
       context: web3signer/flyway
       dockerfile: Dockerfile
     networks:
-      monitoring_dev_network:
+      dncore_network:
         aliases:
           - flyway.web3signer.dappnode
     depends_on:
@@ -50,7 +50,7 @@ services:
       context: web3signer/postgres
       dockerfile: Dockerfile
     networks:
-      monitoring_dev_network:
+      dncore_network:
         aliases:
           - postgres.web3signer.dappnode
     healthcheck:
@@ -64,13 +64,13 @@ services:
       context: web3signer/brain
       dockerfile: Dockerfile
     networks:
-      monitoring_dev_network:
+      dncore_network:
         aliases:
           - brain.web3signer.dappnode
 
 networks:
-  monitoring_dev_network:
-    name: monitoring_dev_network
+  dncore_network:
+    name: dncore_network
   
 
 volumes:
