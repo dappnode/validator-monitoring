@@ -41,6 +41,9 @@ services:
       dncore_network:
         aliases:
           - flyway.web3signer.dappnode
+    depends_on:
+      postgres:
+        condition: service_started
 
   postgres:
     build:
@@ -50,6 +53,11 @@ services:
       dncore_network:
         aliases:
           - postgres.web3signer.dappnode
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   brain:
     build:
