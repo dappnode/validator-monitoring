@@ -28,10 +28,14 @@ services:
     build:
       context: web3signer/signer
       dockerfile: Dockerfile
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
     networks:
       dncore_network:
         aliases:
           - web3signer.web3signer.dappnode
+    restart: always
 
   flyway:
     build:
@@ -53,11 +57,13 @@ services:
       dncore_network:
         aliases:
           - postgres.web3signer.dappnode
+    user: postgres
     healthcheck:
       test: pg_isready -U postgres
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: always
 
   brain:
     build:
@@ -71,6 +77,7 @@ services:
 networks:
   dncore_network:
     name: dncore_network
+    external: true
   
 
 volumes:
