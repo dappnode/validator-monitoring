@@ -19,6 +19,7 @@ func main() {
 		config.Port,
 		config.MongoDBURI,
 		config.BeaconNodeURLs,
+		config.BypassValidatorsFiltering,
 	)
 
 	s.Start()

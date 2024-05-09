@@ -33,8 +33,8 @@ func TestGetActiveValidators(t *testing.T) {
 		},
 	}
 
-	// Call the function
-	result := GetActiveValidators(requestsDecoded, beaconNodeUrls)
+	// Call the function. "bypass" is set to false, so the function will do expected behaviour and filter out inactive validators
+	result := GetActiveValidators(requestsDecoded, beaconNodeUrls["holesky"], false)
 
 	// You may need to mock the server's response or adjust the expected values here according to your actual setup
 	expectedNumValidators := 3 // This should match the number of mock validators that are "active"

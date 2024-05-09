@@ -65,9 +65,7 @@ func decodeAndValidateRequests(r *http.Request) ([]types.SignatureRequestDecoded
 	return validRequests, nil
 }
 
-func validateAndInsertSignature(req types.SignatureRequestDecoded, dbCollection *mongo.Collection, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func validateAndInsertSignature(req types.SignatureRequestDecoded, dbCollection *mongo.Collection) {
 	isValidSignature, err := validation.IsValidSignature(req)
 	if err != nil {
 		logger.Error("Failed to validate signature: " + err.Error())
@@ -99,7 +97,7 @@ func validateAndInsertSignature(req types.SignatureRequestDecoded, dbCollection 
 // 1. Decode and validate
 // 2. Get active validators
 // 3. Validate signature and insert into MongoDB
-func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[string]string) {
+func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[string]string, bypassValidatorFiltering bool) {
 	logger.Debug("Received new POST '/newSignature' request")
 
 	// Decode and validate incoming requests
@@ -111,27 +109,41 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 	}
 	// Respond with an error if no valid requests were found
 	if len(validRequests) == 0 {
-		logger.Error("No valid requests")
 		respondError(w, http.StatusBadRequest, "No valid requests")
 		return
 	}
 
-	// Get active validators (not throws only takes active validators)
-	requestsWithActiveValidators := validation.GetActiveValidators(validRequests, beaconNodeUrls)
-	// Respond with an error if no active validators were found
-	if len(requestsWithActiveValidators) == 0 {
-		respondError(w, http.StatusInternalServerError, "No active validators found in request")
-		return
+	var wg sync.WaitGroup
+	appendMutex := new(sync.Mutex)                            // Mutex for appending to the slice
+	dbMutex := new(sync.Mutex)                                // Mutex for database operations
+	allValidatedRequests := []types.SignatureRequestDecoded{} // This will collect all valid requests
+
+	// Iterate over all beacon nodes and get active validators
+	for _, url := range beaconNodeUrls {
+		wg.Add(1)
+		go func(url string) {
+			defer wg.Done()
+			activeValidators := validation.GetActiveValidators(validRequests, url, bypassValidatorFiltering)
+			if len(activeValidators) == 0 {
+				return
+			}
+
+			appendMutex.Lock()
+			allValidatedRequests = append(allValidatedRequests, activeValidators...) // Only one goroutine can append to the slice at a time
+			appendMutex.Unlock()
+
+			for _, req := range activeValidators {
+				dbMutex.Lock()
+				validateAndInsertSignature(req, dbCollection) // Do we really need to lock the db insertions?
+				dbMutex.Unlock()
+			}
+		}(url) // Pass the URL to the goroutine
 	}
 
-	var wg sync.WaitGroup
-	// Insert into MongoDB if signature is valid
-	for _, req := range requestsWithActiveValidators {
-		// create a goroutine for each request
-		wg.Add(1)
-		go validateAndInsertSignature(req, dbCollection, &wg)
-	}
-	// Wait for all goroutines to finish
 	wg.Wait()
+	if len(allValidatedRequests) == 0 {
+		respondError(w, http.StatusInternalServerError, "No active validators found in any network")
+		return
+	}
 	respondOK(w, "Finished processing signatures")
 }

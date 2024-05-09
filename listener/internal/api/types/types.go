@@ -25,6 +25,7 @@ type ActiveValidator struct {
 	WithdrawableEpoch          string `json:"withdrawable_epoch"`
 }
 
+// https://ethereum.github.io/beacon-APIs/#/Beacon /eth/v1/beacon/states/{state_id}/validators
 type ActiveValidatorsApiResponse struct {
 	ExecutionOptimistic bool `json:"execution_optimistic"`
 	Finalized           bool `json:"finalized"`
