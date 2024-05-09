@@ -11,16 +11,28 @@ services:
     volumes:
       - ./listener/cmd:/app/cmd
       - ./listener/internal:/app/internal
+    networks:
+      dncore_network:
+        aliases:
+          - listener.dappnode
 
   mongo:
     extends:
       file: docker-compose.yml
       service: mongo
+    networks:
+      dncore_network:
+        aliases:
+          - mongo.dappnode
 
   ui:
     extends:
       file: docker-compose.yml
       service: ui
+    networks:
+      dncore_network:
+        aliases:
+          - ui.dappnode
 
   # Below services simulates web3signer setup
   
