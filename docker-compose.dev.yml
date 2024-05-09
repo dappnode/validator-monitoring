@@ -85,6 +85,8 @@ services:
       dncore_network:
         aliases:
           - brain.web3signer.dappnode
+    volumes:
+      - "brain_data:/app/data"
 
 networks:
   dncore_network:
@@ -93,4 +95,5 @@ networks:
   
 
 volumes:
-  mongo-data:
+  brain_data: {}
+  mongo-data: {}
