@@ -22,5 +22,48 @@ services:
       file: docker-compose.yml
       service: ui
 
+  # Below services simulates web3signer setup
+  
+  web3signer:
+    build:
+      context: web3signer/signer
+      dockerfile: Dockerfile
+    networks:
+      dncore_network:
+        aliases:
+          - web3signer.web3signer.dappnode
+
+  flyway:
+    build:
+      context: web3signer/flyway
+      dockerfile: Dockerfile
+    networks:
+      dncore_network:
+        aliases:
+          - flyway.web3signer.dappnode
+
+  postgres:
+    build:
+      context: web3signer/postgres
+      dockerfile: Dockerfile
+    networks:
+      dncore_network:
+        aliases:
+          - postgres.web3signer.dappnode
+
+  brain:
+    build:
+      context: web3signer/brain
+      dockerfile: Dockerfile
+    networks:
+      dncore_network:
+        aliases:
+          - brain.web3signer.dappnode
+
+networks:
+  dncore_network:
+    name: dncore_network
+  
+
 volumes:
   mongo-data:
