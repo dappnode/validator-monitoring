@@ -11,16 +11,89 @@ services:
     volumes:
       - ./listener/cmd:/app/cmd
       - ./listener/internal:/app/internal
+    networks:
+      dncore_network:
+        aliases:
+          - listener.dappnode
 
   mongo:
     extends:
       file: docker-compose.yml
       service: mongo
+    networks:
+      dncore_network:
+        aliases:
+          - mongo.dappnode
 
   ui:
     extends:
       file: docker-compose.yml
       service: ui
+    networks:
+      dncore_network:
+        aliases:
+          - ui.dappnode
+
+  # Below services simulates web3signer setup
+  
+  web3signer:
+    build:
+      context: web3signer/signer
+      dockerfile: Dockerfile
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    networks:
+      dncore_network:
+        aliases:
+          - web3signer.web3signer.dappnode
+    restart: always
+
+  flyway:
+    build:
+      context: web3signer/flyway
+      dockerfile: Dockerfile
+    networks:
+      dncore_network:
+        aliases:
+          - flyway.web3signer.dappnode
+    depends_on:
+      postgres:
+        condition: service_started
+
+  postgres:
+    build:
+      context: web3signer/postgres
+      dockerfile: Dockerfile
+    networks:
+      dncore_network:
+        aliases:
+          - postgres.web3signer.dappnode
+    user: postgres
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  brain:
+    build:
+      context: web3signer/brain
+      dockerfile: Dockerfile
+    networks:
+      dncore_network:
+        aliases:
+          - brain.web3signer.dappnode
+    volumes:
+      - "brain_data:/app/data"
+
+networks:
+  dncore_network:
+    name: dncore_network
+    external: true
+  
 
 volumes:
-  mongo-data:
+  brain_data: {}
+  mongo-data: {}
