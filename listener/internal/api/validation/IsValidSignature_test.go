@@ -42,7 +42,7 @@ func TestIsValidSignature(t *testing.T) {
 		Payload:        base64.StdEncoding.EncodeToString(messageBytes),
 		Signature:      signature.SerializeToHexStr(),
 		Network:        "mainnet",
-		Label:          "solo",
+		Tag:            "solo",
 	}
 
 	// Validate the signature
@@ -84,7 +84,7 @@ func TestIsValidSignatureError(t *testing.T) {
 		Payload:        base64.StdEncoding.EncodeToString(payloadBytes),
 		Signature:      "clearlyInvalidSignature", // Intentionally invalid
 		Network:        "mainnet",
-		Label:          "solo",
+		Tag:            "solo",
 	}
 
 	// Validate the signature

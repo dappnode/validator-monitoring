@@ -18,6 +18,8 @@ func main() {
 	s := api.NewApi(
 		config.Port,
 		config.MongoDBURI,
+		config.BeaconNodeURLs,
+		config.BypassValidatorsFiltering,
 	)
 
 	s.Start()

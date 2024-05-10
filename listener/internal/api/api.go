@@ -9,16 +9,20 @@ import (
 )
 
 type httpApi struct {
-	server *http.Server
-	port   string
-	dbUri  string
+	server                   *http.Server
+	port                     string
+	dbUri                    string
+	beaconNodeUrls           map[string]string
+	bypassValidatorFiltering bool
 }
 
 // create a new api instance
-func NewApi(port string, mongoDbUri string) *httpApi {
+func NewApi(port string, mongoDbUri string, beaconNodeUrls map[string]string, bypassValidatorFiltering bool) *httpApi {
 	return &httpApi{
-		port:  port,
-		dbUri: mongoDbUri,
+		port:                     port,
+		dbUri:                    mongoDbUri,
+		beaconNodeUrls:           beaconNodeUrls,
+		bypassValidatorFiltering: bypassValidatorFiltering,
 	}
 }
 
@@ -47,7 +51,7 @@ func (s *httpApi) Start() {
 	// setup the http api
 	s.server = &http.Server{
 		Addr:    ":" + s.port,
-		Handler: routes.SetupRouter(dbCollection),
+		Handler: routes.SetupRouter(dbCollection, s.beaconNodeUrls, s.bypassValidatorFiltering),
 	}
 
 	// start the api
