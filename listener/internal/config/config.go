@@ -48,11 +48,6 @@ func LoadConfig() (*Config, error) {
 	}
 	bypassValidatorsFiltering := strings.ToLower(bypassValidatorsFilteringStr) == "true"
 
-	beaconNodeURL := os.Getenv("BEACON_NODE_URL")
-	if beaconNodeURL == "" {
-		logger.Fatal("BEACON_NODE_URL is not set")
-	}
-
 	// beacon node urls per network
 
 	beaconMainnet := os.Getenv("BEACON_NODE_URL_MAINNET")
