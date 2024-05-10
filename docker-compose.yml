@@ -13,6 +13,7 @@ services:
       API_PORT: "${API_PORT}"
       LOG_LEVEL: "${LOG_LEVEL}"
       BYPASS_VALIDATORS_FILTERING: "${BYPASS_VALIDATORS_FILTERING}"
+      BEACON_NODE_URL: ${BEACON_NODE_URL}
     depends_on:
       - mongo
     container_name: listener

@@ -17,10 +17,11 @@ COPY cmd/ ./cmd/
 RUN CGO_ENABLED=0 GOOS=linux go build -v -o /bin/listener ./cmd/listener/main.go
 
 # Use a Docker multi-stage build to create a lean production image.
+# # build-essential required by dependency github.com/herumi/bls-eth-go-binary
 FROM debian:bookworm-slim
 RUN set -eux; \
     apt-get update; \
-    apt-get install -y --no-install-recommends ca-certificates netbase; \
+    apt-get install -y --no-install-recommends ca-certificates netbase git build-essential; \
     # Remove apt cache to reduce image size.
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*

@@ -1,9 +1,9 @@
 FROM eclipse-temurin:17 as jre-build
 WORKDIR /app
 # TODO: update with official repo
-RUN apt update && apt install git -y && git clone https://github.com/usmansaleem/web3signer.git
+RUN apt update && apt install git -y && git clone https://github.com/consensys/web3signer.git
 WORKDIR /app/web3signer 
-RUN git fetch origin && git checkout sign_extension && ./gradlew clean assemble && tar -xzf ./build/distributions/web3signer-develop.tar.gz
+RUN git fetch origin && ./gradlew clean assemble && tar -xzf ./build/distributions/web3signer-develop.tar.gz
 
 ##############
 # WEB3SIGNER #

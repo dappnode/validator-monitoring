@@ -5,7 +5,8 @@ FROM golang:1.22.0-alpine3.19
 WORKDIR /app
 
 # Install system dependencies required for Air and your application
-RUN apk add --no-cache git
+# build-base required by dependency github.com/herumi/bls-eth-go-binary
+RUN apk add --no-cache git build-base
 
 # Install Air
 RUN go install github.com/cosmtrek/air@latest
