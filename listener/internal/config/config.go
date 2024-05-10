@@ -69,6 +69,16 @@ func LoadConfig() (*Config, error) {
 		logger.Fatal("BEACON_NODE_URL_LUKSO is not set")
 	}
 
+	// print all envs
+	logger.Info("MONGO_DB_URI: " + mongoDBURI)
+	logger.Info("LOG_LEVEL: " + logLevel)
+	logger.Info("API_PORT: " + apiPort)
+	logger.Info("BYPASS_VALIDATORS_FILTERING: " + bypassValidatorsFilteringStr)
+	logger.Info("BEACON_NODE_URL_MAINNET: " + beaconMainnet)
+	logger.Info("BEACON_NODE_URL_HOLESKY: " + beaconHolesky)
+	logger.Info("BEACON_NODE_URL_GNOSIS: " + beaconGnosis)
+	logger.Info("BEACON_NODE_URL_LUKSO: " + beaconLukso)
+
 	beaconNodeURLs := map[string]string{
 		"mainnet": beaconMainnet,
 		"holesky": beaconHolesky,
