@@ -49,7 +49,7 @@ func PostSignaturesByValidatorAggr(w http.ResponseWriter, r *http.Request, dbCol
 		},
 		{
 			"$group": bson.M{
-				"_id": bson.M{"pubkey": "$pubkey", "network": "$network", "label": "$label"},
+				"_id": bson.M{"pubkey": "$pubkey", "network": "$network", "tag": "$tag"},
 				"signatures": bson.M{
 					"$push": bson.M{
 						"signature": "$signature",
@@ -64,7 +64,7 @@ func PostSignaturesByValidatorAggr(w http.ResponseWriter, r *http.Request, dbCol
 				"_id":        0,
 				"pubkey":     "$_id.pubkey",
 				"network":    "$_id.network",
-				"label":      "$_id.label",
+				"tag":        "$_id.tag",
 				"signatures": 1,
 			},
 		},

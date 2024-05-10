@@ -5,7 +5,7 @@ type SignatureRequestDecoded struct {
 	Payload        string         `json:"payload"`
 	Signature      string         `json:"signature"`
 	Network        string         `json:"network"`
-	Label          string         `json:"label"`
+	Tag            string         `json:"tag"`
 }
 
 type DecodedPayload struct {

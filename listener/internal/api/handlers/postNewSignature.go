@@ -18,7 +18,7 @@ type signatureRequest struct {
 	Payload   string `json:"payload"`
 	Signature string `json:"signature"`
 	Network   string `json:"network"`
-	Label     string `json:"label"`
+	Tag       string `json:"tag"`
 }
 
 // decodeAndValidateRequests decodes and validates incoming HTTP requests.
@@ -31,7 +31,7 @@ func decodeAndValidateRequests(r *http.Request) ([]types.SignatureRequestDecoded
 
 	var validRequests []types.SignatureRequestDecoded
 	for _, req := range requests {
-		if req.Network == "" || req.Label == "" || req.Signature == "" || req.Payload == "" {
+		if req.Network == "" || req.Tag == "" || req.Signature == "" || req.Payload == "" {
 			logger.Debug("Skipping invalid signature from request, missing fields")
 			continue
 		}
@@ -55,7 +55,7 @@ func decodeAndValidateRequests(r *http.Request) ([]types.SignatureRequestDecoded
 				Payload:        req.Payload,
 				Signature:      req.Signature,
 				Network:        req.Network,
-				Label:          req.Label,
+				Tag:            req.Tag,
 			})
 		} else {
 			logger.Debug("Skipping invalid signature from request, invalid payload format")
@@ -83,7 +83,7 @@ func validateAndInsertSignature(req types.SignatureRequestDecoded, dbCollection 
 		"pubkey":    req.DecodedPayload.Pubkey,
 		"signature": req.Signature,
 		"network":   req.Network,
-		"label":     req.Label,
+		"tag":       req.Tag,
 	})
 	if err != nil {
 		logger.Error("Failed to insert signature into MongoDB: " + err.Error())
