@@ -35,7 +35,7 @@ services:
           - ui.dappnode
 
   # Below services simulates web3signer setup
-  
+
   web3signer:
     build:
       context: web3signer/signer
@@ -92,8 +92,7 @@ networks:
   dncore_network:
     name: dncore_network
     external: true
-  
 
 volumes:
   brain_data: {}
-  mongo-data: {}
+  mongo_data: {}
