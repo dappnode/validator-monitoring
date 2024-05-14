@@ -12,8 +12,7 @@ import (
 
 // GetActiveValidators checks the active status of validators from a specific beacon node.
 // If bypass is true, it simply returns all decoded requests.
-func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrl string, bypass bool) []types.SignatureRequestDecoded {
-
+func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrl string) []types.SignatureRequestDecoded {
 	if len(requestsDecoded) == 0 {
 		fmt.Println("no requests to process")
 		return nil
@@ -21,7 +20,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 
 	ids := make([]string, 0, len(requestsDecoded))
 	for _, req := range requestsDecoded {
-		ids = append(ids, req.DecodedPayload.Pubkey)
+		ids = append(ids, req.Pubkey)
 	}
 
 	if len(ids) == 0 {
@@ -77,14 +76,10 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	// Filter the list of decoded requests to include only those that are active
 	var activeValidators []types.SignatureRequestDecoded
 	for _, req := range requestsDecoded {
-		if _, isActive := activeValidatorMap[req.DecodedPayload.Pubkey]; isActive {
+		if _, isActive := activeValidatorMap[req.Pubkey]; isActive {
 			activeValidators = append(activeValidators, req)
 		}
 	}
 
-	if bypass {
-		return requestsDecoded // do not return the filtered list
-	} else {
-		return activeValidators // return the filtered list (default behaviour)
-	}
+	return activeValidators
 }

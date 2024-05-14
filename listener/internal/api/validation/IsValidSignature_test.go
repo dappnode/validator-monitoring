@@ -24,7 +24,6 @@ func TestIsValidSignature(t *testing.T) {
 	decodedPayload := types.DecodedPayload{
 		Platform:  "dappnode",
 		Timestamp: "2024-04-01T15:00:00Z",
-		Pubkey:    publicKey.SerializeToHexStr(),
 	}
 
 	// Serialize the message
@@ -39,6 +38,7 @@ func TestIsValidSignature(t *testing.T) {
 	// Prepare the request
 	req := types.SignatureRequestDecoded{
 		DecodedPayload: decodedPayload,
+		Pubkey:         publicKey.SerializeToHexStr(),
 		Payload:        base64.StdEncoding.EncodeToString(messageBytes),
 		Signature:      signature.SerializeToHexStr(),
 		Network:        "mainnet",
@@ -69,7 +69,6 @@ func TestIsValidSignatureError(t *testing.T) {
 	decodedPayload := types.DecodedPayload{
 		Platform:  "dappnode",
 		Timestamp: "2024-04-01T15:00:00Z",
-		Pubkey:    badPublicKey,
 	}
 
 	// Serialize the payload
@@ -81,6 +80,7 @@ func TestIsValidSignatureError(t *testing.T) {
 	// Create the SignatureRequestDecoded with a bad signature to ensure it fails
 	req := types.SignatureRequestDecoded{
 		DecodedPayload: decodedPayload,
+		Pubkey:         badPublicKey,
 		Payload:        base64.StdEncoding.EncodeToString(payloadBytes),
 		Signature:      "clearlyInvalidSignature", // Intentionally invalid
 		Network:        "mainnet",

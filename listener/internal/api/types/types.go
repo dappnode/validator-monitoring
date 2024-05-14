@@ -3,6 +3,7 @@ package types
 type SignatureRequestDecoded struct {
 	DecodedPayload DecodedPayload `json:"decodedPayload"`
 	Payload        string         `json:"payload"`
+	Pubkey         string         `json:"pubkey"`
 	Signature      string         `json:"signature"`
 	Network        string         `json:"network"`
 	Tag            string         `json:"tag"`
@@ -11,7 +12,7 @@ type SignatureRequestDecoded struct {
 type DecodedPayload struct {
 	Platform  string `json:"platform"`
 	Timestamp string `json:"timestamp"`
-	Pubkey    string `json:"pubkey"`
+	Type      string `json:"type"`
 }
 
 type ActiveValidator struct {

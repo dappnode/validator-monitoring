@@ -21,9 +21,7 @@ type Config struct {
 	BeaconNodeURLs map[string]string
 }
 
-// TODO: read bypass boolean env
 func LoadConfig() (*Config, error) {
-
 	mongoDBURI := os.Getenv("MONGO_DB_URI")
 	if mongoDBURI == "" {
 		logger.Fatal("MONGO_DB_URI is not set")

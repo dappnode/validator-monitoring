@@ -3,45 +3,67 @@ package validation
 import (
 	"encoding/hex"
 	"encoding/json"
+	"strings"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
+	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
 func IsValidSignature(req types.SignatureRequestDecoded) (bool, error) {
 	// Initialize the BLS system
 	if err := bls.Init(bls.BLS12_381); err != nil {
+		logger.Error("Failed to initialize BLS system: " + err.Error())
+		return false, err
+	}
+	// Set the BLS mode to ETH draft 07
+	if err := bls.SetETHmode(bls.EthModeDraft07); err != nil {
+		logger.Error("Failed to set BLS mode to ETH draft 07: " + err.Error())
 		return false, err
 	}
 
-	// Decode the public key from hex
-	pubkeyBytes, err := hex.DecodeString(req.DecodedPayload.Pubkey)
+	// Decode the public key from hex, remove the 0x prefix ONLY if exists from req.Pubkey
+	req.Pubkey = strings.TrimPrefix(req.Pubkey, "0x")
+	req.Pubkey = strings.TrimSpace(req.Pubkey)
+
+	pubkeyBytes, err := hex.DecodeString(req.Pubkey)
 	if err != nil {
-		return false, err
-	}
-	var pubkey bls.PublicKey
-	if err := pubkey.Deserialize(pubkeyBytes); err != nil {
+		logger.Error("Failed to decode public key from hex: " + err.Error())
 		return false, err
 	}
 
-	// Decode the signature from hex
+	var pubkeyDes bls.PublicKey
+	if err := pubkeyDes.Deserialize(pubkeyBytes); err != nil {
+		logger.Error("Failed to deserialize public key: " + err.Error())
+		return false, err
+	}
+
+	// Decode the signature from hex, remove the 0x prefix ONLY if exists from req.Signature
+	req.Signature = strings.TrimPrefix(req.Signature, "0x")
+	req.Signature = strings.TrimSpace(req.Signature)
+
 	sigBytes, err := hex.DecodeString(req.Signature)
 	if err != nil {
+		logger.Error("Failed to decode signature from hex: " + err.Error())
 		return false, err
 	}
+
 	var sig bls.Sign
 	if err := sig.Deserialize(sigBytes); err != nil {
+		logger.Error("Failed to deserialize signature: " + err.Error())
 		return false, err
 	}
 
 	// Serialize payload to string (assuming it's what was signed)
 	payloadBytes, err := json.Marshal(req.DecodedPayload)
 	if err != nil {
+		logger.Error("Failed to serialize payload to string: " + err.Error())
 		return false, err
 	}
 
 	// Verify the signature
-	if !sig.VerifyByte(&pubkey, payloadBytes) {
+	if !sig.VerifyByte(&pubkeyDes, payloadBytes) {
+		logger.Debug("Failed to verify signature")
 		return false, nil
 	}
 

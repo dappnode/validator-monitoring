@@ -16,6 +16,7 @@ import (
 
 type signatureRequest struct {
 	Payload   string `json:"payload"`
+	Pubkey    string `json:"pubkey"`
 	Signature string `json:"signature"`
 	Network   string `json:"network"`
 	Tag       string `json:"tag"`
@@ -31,7 +32,7 @@ func decodeAndValidateRequests(r *http.Request) ([]types.SignatureRequestDecoded
 
 	var validRequests []types.SignatureRequestDecoded
 	for _, req := range requests {
-		if req.Network == "" || req.Tag == "" || req.Signature == "" || req.Payload == "" {
+		if req.Network == "" || req.Tag == "" || req.Signature == "" || req.Payload == "" || req.Pubkey == "" {
 			logger.Debug("Skipping invalid signature from request, missing fields")
 			continue
 		}
@@ -49,10 +50,11 @@ func decodeAndValidateRequests(r *http.Request) ([]types.SignatureRequestDecoded
 			logger.Error("Failed to decode JSON payload from request: " + err.Error())
 			continue
 		}
-		if decodedPayload.Platform == "dappnode" && decodedPayload.Timestamp != "" && decodedPayload.Pubkey != "" {
+		if decodedPayload.Platform == "dappnode" && decodedPayload.Timestamp != "" {
 			validRequests = append(validRequests, types.SignatureRequestDecoded{
 				DecodedPayload: decodedPayload,
 				Payload:        req.Payload,
+				Pubkey:         req.Pubkey,
 				Signature:      req.Signature,
 				Network:        req.Network,
 				Tag:            req.Tag,
@@ -60,6 +62,17 @@ func decodeAndValidateRequests(r *http.Request) ([]types.SignatureRequestDecoded
 		} else {
 			logger.Debug("Skipping invalid signature from request, invalid payload format")
 		}
+	}
+
+	// print req pubkey
+	for _, req := range validRequests {
+		logger.Debug("req.Pubkey: " + req.Pubkey)
+		logger.Debug("req.Signature: " + req.Signature)
+		logger.Debug("req.Network: " + req.Network)
+		logger.Debug("req.Tag: " + req.Tag)
+		logger.Debug("req.DecodedPayload.Type: " + req.DecodedPayload.Type)
+		logger.Debug("req.DecodedPayload.Platform: " + req.DecodedPayload.Platform)
+		logger.Debug("req.DecodedPayload.Timestamp: " + req.DecodedPayload.Timestamp)
 	}
 
 	return validRequests, nil
@@ -80,7 +93,7 @@ func validateAndInsertSignature(req types.SignatureRequestDecoded, dbCollection 
 	_, err = dbCollection.InsertOne(context.TODO(), bson.M{
 		"platform":  req.DecodedPayload.Platform,
 		"timestamp": req.DecodedPayload.Timestamp,
-		"pubkey":    req.DecodedPayload.Pubkey,
+		"pubkey":    req.Pubkey,
 		"signature": req.Signature,
 		"network":   req.Network,
 		"tag":       req.Tag,
@@ -113,37 +126,34 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		return
 	}
 
-	var wg sync.WaitGroup
-	appendMutex := new(sync.Mutex)                            // Mutex for appending to the slice
-	dbMutex := new(sync.Mutex)                                // Mutex for database operations
-	allValidatedRequests := []types.SignatureRequestDecoded{} // This will collect all valid requests
-
-	// Iterate over all beacon nodes and get active validators
-	for _, url := range beaconNodeUrls {
-		wg.Add(1)
-		go func(url string) {
-			defer wg.Done()
-			activeValidators := validation.GetActiveValidators(validRequests, url, bypassValidatorFiltering)
-			if len(activeValidators) == 0 {
-				return
-			}
-
-			appendMutex.Lock()
-			allValidatedRequests = append(allValidatedRequests, activeValidators...) // Only one goroutine can append to the slice at a time
-			appendMutex.Unlock()
-
-			for _, req := range activeValidators {
-				dbMutex.Lock()
-				validateAndInsertSignature(req, dbCollection) // Do we really need to lock the db insertions?
-				dbMutex.Unlock()
-			}
-		}(url) // Pass the URL to the goroutine
-	}
-
-	wg.Wait()
-	if len(allValidatedRequests) == 0 {
-		respondError(w, http.StatusInternalServerError, "No active validators found in any network")
+	// Get active validators from the network, get the network from the first item in the array
+	beaconNodeUrl, ok := beaconNodeUrls[validRequests[0].Network]
+	if !ok {
+		respondError(w, http.StatusBadRequest, "Invalid network")
 		return
 	}
+
+	// if bypassValidatorFiltering is true, we skip the active validators check
+	activeValidators := []types.SignatureRequestDecoded{}
+	if bypassValidatorFiltering {
+		logger.Debug("Bypassing active validators check")
+		activeValidators = validRequests
+	} else {
+		activeValidators = validation.GetActiveValidators(validRequests, beaconNodeUrl)
+	}
+
+	if len(activeValidators) == 0 {
+		respondError(w, http.StatusInternalServerError, "No active validators found in network")
+		return
+	}
+
+	// Iterate over all active validators and validate and insert the signature
+	dbMutex := new(sync.Mutex) // Mutex for database operations
+	for _, req := range activeValidators {
+		dbMutex.Lock()
+		validateAndInsertSignature(req, dbCollection) // Do we really need to lock the db insertions?
+		dbMutex.Unlock()
+	}
+
 	respondOK(w, "Finished processing signatures")
 }

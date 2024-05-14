@@ -46,7 +46,7 @@ services:
     networks:
       dncore_network:
         aliases:
-          - web3signer.web3signer.dappnode
+          - web3signer.web3signer-holesky.dappnode
     restart: always
 
   flyway:
