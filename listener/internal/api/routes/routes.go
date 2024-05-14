@@ -17,12 +17,6 @@ func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[string]strin
 	r.HandleFunc("/newSignature", func(w http.ResponseWriter, r *http.Request) {
 		handlers.PostNewSignature(w, r, dbCollection, beaconNodeUrls, bypassValidatorFiltering)
 	}).Methods(http.MethodPost)
-	r.HandleFunc("/signaturesByValidator", func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostSignaturesByValidator(w, r, dbCollection)
-	}).Methods(http.MethodPost)
-	r.HandleFunc("/signaturesByValidatorAggr", func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostSignaturesByValidatorAggr(w, r, dbCollection)
-	}).Methods(http.MethodPost)
 
 	// Middlewares
 	// r.Use(corsmiddleware()))
