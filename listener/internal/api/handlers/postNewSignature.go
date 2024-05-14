@@ -29,7 +29,7 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		return
 	}
 	// Decode and validate incoming requests
-	validRequests, err := validation.DecodeAndValidateRequests(requests)
+	validRequests, err := validation.ValidateAndDecodeRequests(requests)
 	if err != nil {
 		logger.Error("Failed to decode request body: " + err.Error())
 		respondError(w, http.StatusBadRequest, "Invalid request format")
@@ -60,7 +60,7 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 
 	validSignatures := []types.SignatureRequestDecoded{}
 	for _, req := range activeValidators {
-		isValidSignature, err := validation.IsValidSignature(req)
+		isValidSignature, err := validation.VerifySignature(req)
 		if err != nil {
 			logger.Error("Failed to validate signature: " + err.Error())
 			continue

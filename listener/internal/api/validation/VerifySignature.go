@@ -10,7 +10,7 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-func IsValidSignature(req types.SignatureRequestDecoded) (bool, error) {
+func VerifySignature(req types.SignatureRequestDecoded) (bool, error) {
 	// Initialize the BLS system
 	if err := bls.Init(bls.BLS12_381); err != nil {
 		logger.Error("Failed to initialize BLS system: " + err.Error())
