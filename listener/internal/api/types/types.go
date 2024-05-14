@@ -10,9 +10,9 @@ type SignatureRequestDecoded struct {
 }
 
 type DecodedPayload struct {
+	Type      string `json:"type"`
 	Platform  string `json:"platform"`
 	Timestamp string `json:"timestamp"`
-	Type      string `json:"type"`
 }
 
 type ActiveValidator struct {
