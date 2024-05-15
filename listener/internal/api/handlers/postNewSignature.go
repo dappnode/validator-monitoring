@@ -90,8 +90,9 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 					"payload":   req.Payload,
 					"signature": req.Signature,
 					"decodedPayload": bson.M{
+						"type":      req.DecodedPayload.Type,
+						"platform":  req.DecodedPayload.Platform,
 						"timestamp": req.DecodedPayload.Timestamp, // Needed to filter out old signatures
-						// We can add rest of fields if storage is not a problem
 					},
 				},
 			},

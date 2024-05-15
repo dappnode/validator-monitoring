@@ -43,8 +43,13 @@ func (s *httpApi) Start() {
 		Handler: routes.SetupRouter(s.dbCollection, s.beaconNodeUrls, s.bypassValidatorFiltering),
 	}
 
-	if err := s.server.ListenAndServe(); err != nil {
+	// ListenAndServe returns ErrServerClosed to indicate that the server has been shut down when the server is closed gracefully. We need to
+	// handle this error to avoid treating it as a fatal error. See https://pkg.go.dev/net/http#Server.ListenAndServe
+	err := s.server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
 		logger.Fatal("Failed to start server: " + err.Error())
+	} else if err == http.ErrServerClosed {
+		logger.Info("Server closed gracefully")
 	}
 }
 

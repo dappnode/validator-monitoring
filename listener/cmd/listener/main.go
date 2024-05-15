@@ -86,5 +86,5 @@ func main() {
 		logger.Error("Failed to shut down server gracefully: " + fmt.Sprintln(err))
 	}
 
-	logger.Info("Server shut down")
+	logger.Info("Listener stopped gracefully")
 }
