@@ -66,7 +66,7 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 			continue
 		}
 		if !isValidSignature {
-			logger.Debug("Invalid signature: " + req.Signature)
+			logger.Warn("Invalid signature: " + req.Signature)
 			continue
 		}
 		validSignatures = append(validSignatures, req)

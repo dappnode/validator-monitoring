@@ -10,6 +10,29 @@ import (
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 )
 
+type activeValidator struct {
+	Pubkey                     string `json:"pubkey"`
+	WithdrawalCredentials      string `json:"withdrawal_credentials"`
+	EffectiveBalance           string `json:"effective_balance"`
+	Slashed                    bool   `json:"slashed"`
+	ActivationEligibilityEpoch string `json:"activation_eligibility_epoch"`
+	ActivationEpoch            string `json:"activation_epoch"`
+	ExitEpoch                  string `json:"exit_epoch"`
+	WithdrawableEpoch          string `json:"withdrawable_epoch"`
+}
+
+// https://ethereum.github.io/beacon-APIs/#/Beacon /eth/v1/beacon/states/{state_id}/validators
+type activeValidatorsApiResponse struct {
+	ExecutionOptimistic bool `json:"execution_optimistic"`
+	Finalized           bool `json:"finalized"`
+	Data                []struct {
+		Index     string          `json:"index"`
+		Balance   string          `json:"balance"`
+		Status    string          `json:"status"`
+		Validator activeValidator `json:"validator"`
+	} `json:"data"`
+}
+
 // GetActiveValidators checks the active status of validators from a specific beacon node.
 // If bypass is true, it simply returns all decoded requests.
 func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrl string) []types.SignatureRequestDecoded {
@@ -61,7 +84,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	}
 
 	// Decode the API response directly into the ApiResponse struct
-	var apiResponse types.ActiveValidatorsApiResponse
+	var apiResponse activeValidatorsApiResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
 		fmt.Printf("error decoding response data: %v\n", err)
 		return nil

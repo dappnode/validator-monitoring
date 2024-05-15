@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -22,11 +23,6 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-	mongoDBURI := os.Getenv("MONGO_DB_URI")
-	if mongoDBURI == "" {
-		logger.Fatal("MONGO_DB_URI is not set")
-	}
-
 	logLevel := os.Getenv("LOG_LEVEL")
 	if logLevel == "" {
 		logger.Info("LOG_LEVEL is not set, using default INFO")
@@ -35,7 +31,8 @@ func LoadConfig() (*Config, error) {
 
 	apiPort := os.Getenv("API_PORT")
 	if apiPort == "" {
-		logger.Fatal("API_PORT is not set")
+		logger.Info("API_PORT is not set, using default 8080")
+		apiPort = "8080"
 	}
 
 	// Load bypassValidatorsFiltering boolean from env. Defaults to false unless explicitly set to "true".
@@ -46,36 +43,31 @@ func LoadConfig() (*Config, error) {
 	}
 	bypassValidatorsFiltering := strings.ToLower(bypassValidatorsFilteringStr) == "true"
 
-	// beacon node urls per network
+	mongoDBURI := os.Getenv("MONGO_DB_URI")
+	if mongoDBURI == "" {
+		return nil, fmt.Errorf("MONGO_DB_URI is not set")
+	}
 
+	// beacon node urls per network
 	beaconMainnet := os.Getenv("BEACON_NODE_URL_MAINNET")
 	if beaconMainnet == "" {
-		logger.Fatal("BEACON_NODE_URL_MAINNET is not set")
+		return nil, fmt.Errorf("BEACON_NODE_URL_MAINNET is not set")
 	}
 	beaconHolesky := os.Getenv("BEACON_NODE_URL_HOLESKY")
 	if beaconHolesky == "" {
 		logger.Fatal("BEACON_NODE_URL_HOLESKY is not set")
 	}
-
 	beaconGnosis := os.Getenv("BEACON_NODE_URL_GNOSIS")
 	if beaconGnosis == "" {
-		logger.Fatal("BEACON_NODE_URL_GNOSIS is not set")
+		return nil, fmt.Errorf("BEACON_NODE_URL_GNOSIS is not set")
 	}
-
 	beaconLukso := os.Getenv("BEACON_NODE_URL_LUKSO")
 	if beaconLukso == "" {
-		logger.Fatal("BEACON_NODE_URL_LUKSO is not set")
+		return nil, fmt.Errorf("BEACON_NODE_URL_LUKSO is not set")
 	}
 
-	// print all envs
-	logger.Info("MONGO_DB_URI: " + mongoDBURI)
-	logger.Info("LOG_LEVEL: " + logLevel)
-	logger.Info("API_PORT: " + apiPort)
-	logger.Info("BYPASS_VALIDATORS_FILTERING: " + bypassValidatorsFilteringStr)
-	logger.Info("BEACON_NODE_URL_MAINNET: " + beaconMainnet)
-	logger.Info("BEACON_NODE_URL_HOLESKY: " + beaconHolesky)
-	logger.Info("BEACON_NODE_URL_GNOSIS: " + beaconGnosis)
-	logger.Info("BEACON_NODE_URL_LUKSO: " + beaconLukso)
+	// print all envs in a single line
+	logger.Info("Loaded config: LOG_LEVEL=" + logLevel + " API_PORT=" + apiPort + " MONGO_DB_URI=" + mongoDBURI + " BYPASS_VALIDATORS_FILTERING=" + bypassValidatorsFilteringStr + " BEACON_NODE_URL_MAINNET=" + beaconMainnet + " BEACON_NODE_URL_HOLESKY=" + beaconHolesky + " BEACON_NODE_URL_GNOSIS=" + beaconGnosis + " BEACON_NODE_URL_LUKSO=" + beaconLukso)
 
 	beaconNodeURLs := map[string]string{
 		"mainnet": beaconMainnet,

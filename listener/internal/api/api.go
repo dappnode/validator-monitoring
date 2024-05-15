@@ -28,15 +28,14 @@ func NewApi(port string, mongoDbUri string, beaconNodeUrls map[string]string, by
 
 // start the api
 func (s *httpApi) Start() {
+	logger.Info("Server is running on port " + s.port)
+
 	// if somehow s.server is not nil, it means the server is already running, this should never happen
 	if s.server != nil {
 		logger.Fatal("HTTP server already started")
 	}
 
-	logger.Info("Server is running on port " + s.port)
-	var err error
-
-	// connect to the MongoDB server
+	// get mongo db client
 	dbClient, err := mongodb.GetMongoDbClient(s.dbUri)
 	if err != nil {
 		logger.Fatal("Failed to connect to MongoDB: " + err.Error())
