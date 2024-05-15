@@ -54,8 +54,6 @@ func main() {
 		config.BypassValidatorsFiltering,
 	)
 
-	s.Start()
-
 	// Start the API server in a goroutine. Needs to be in a goroutine to allow for the cron job to run,
 	// otherwise it blocks the main goroutine
 	go func() {
