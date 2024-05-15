@@ -10,13 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// RemoveOldSignatures deletes signatures older than 30 days (24h * 30) from the MongoDB collection
-func RemoveOldSignatures(collection *mongo.Collection) {
-	logger.Debug("Removing signatures older than 30 days")
-	thirtyDaysAgoMillis := time.Now().Add(-720 * time.Hour).UnixMilli()
+// RemoveOldSignatures deletes signatures older than a specified number of hours from the MongoDB collection
+func RemoveOldSignatures(collection *mongo.Collection, hours int) {
+	logger.Debug(fmt.Sprintf("Removing signatures older than %d hours", hours))
+	targetTimeMillis := time.Now().Add(time.Duration(-hours) * time.Hour).UnixMilli() // Calculate time in the past based on hours
 	filter := bson.M{
 		"entries.decodedPayload.timestamp": bson.M{
-			"$lt": fmt.Sprintf("%d", thirtyDaysAgoMillis), // Compare timestamps as strings
+			"$lt": fmt.Sprintf("%d", targetTimeMillis), // Compare timestamps as strings
 		},
 	}
 	// DeleteMany returns the number of documents deleted, it is useless for us since we're never

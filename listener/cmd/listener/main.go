@@ -68,7 +68,8 @@ func main() {
 	// The cron job runs once a day, see https://github.com/robfig/cron/blob/master/doc.go
 	// to test it running once a minute, replace "@daily" for "* * * * *"
 	c.AddFunc("@daily", func() {
-		apiCron.RemoveOldSignatures(dbCollection)
+		// there are 24 * 30 = 720 hours in 30 days
+		apiCron.RemoveOldSignatures(dbCollection, 720)
 	})
 	c.Start()
 
