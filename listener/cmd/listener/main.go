@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/dappnode/validator-monitoring/listener/internal/api"
 	"github.com/dappnode/validator-monitoring/listener/internal/config"
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
@@ -15,7 +13,6 @@ func main() {
 	config, err := config.LoadConfig()
 	if err != nil {
 		logger.Fatal("Failed to load config: " + err.Error())
-		os.Exit(1)
 	}
 	logger.SetLogLevelFromString(config.LogLevel)
 
@@ -23,11 +20,9 @@ func main() {
 	// Any call to bls functions within the process will use this configuration. We initialize bls before starting the api.
 	if err := bls.Init(bls.BLS12_381); err != nil {
 		logger.Fatal("Failed to initialize BLS: " + err.Error())
-		os.Exit(1)
 	}
 	if err := bls.SetETHmode(bls.EthModeDraft07); err != nil {
 		logger.Fatal("Failed to set BLS ETH mode: " + err.Error())
-		os.Exit(1)
 	}
 
 	s := api.NewApi(
