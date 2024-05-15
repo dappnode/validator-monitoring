@@ -11,17 +11,6 @@ import (
 )
 
 func VerifySignature(req types.SignatureRequestDecoded) (bool, error) {
-	// Initialize the BLS system
-	if err := bls.Init(bls.BLS12_381); err != nil {
-		logger.Error("Failed to initialize BLS system: " + err.Error())
-		return false, err
-	}
-	// Set the BLS mode to ETH draft 07
-	if err := bls.SetETHmode(bls.EthModeDraft07); err != nil {
-		logger.Error("Failed to set BLS mode to ETH draft 07: " + err.Error())
-		return false, err
-	}
-
 	// Decode the public key from hex, remove the 0x prefix ONLY if exists from req.Pubkey
 	req.Pubkey = strings.TrimPrefix(req.Pubkey, "0x")
 	req.Pubkey = strings.TrimSpace(req.Pubkey)
