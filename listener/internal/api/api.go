@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/routes"
@@ -44,4 +46,22 @@ func (s *httpApi) Start() {
 	if err := s.server.ListenAndServe(); err != nil {
 		logger.Fatal("Failed to start server: " + err.Error())
 	}
+}
+
+// Shutdown gracefully shuts down the server without interrupting any active connections
+func (s *httpApi) Shutdown(ctx context.Context) error {
+	if s.server == nil {
+		logger.Error("Received shutdown request but server is not running, this should never happen")
+		return nil // Server is not running
+	}
+
+	// Attempt to gracefully shut down the server
+	err := s.server.Shutdown(ctx)
+	if err != nil {
+		logger.Error("Failed to shut down server gracefully: " + fmt.Sprintln(err))
+		return err
+	}
+
+	logger.Info("Server has been shut down gracefully")
+	return nil
 }

@@ -1,11 +1,21 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/herumi/bls-eth-go-binary/bls"
+	"github.com/robfig/cron"
+
 	"github.com/dappnode/validator-monitoring/listener/internal/api"
 	"github.com/dappnode/validator-monitoring/listener/internal/config"
+	apiCron "github.com/dappnode/validator-monitoring/listener/internal/cron" // Renamed to avoid conflict with the cron/v3 package
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 	"github.com/dappnode/validator-monitoring/listener/internal/mongodb"
-	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
 func main() {
@@ -45,4 +55,37 @@ func main() {
 	)
 
 	s.Start()
+
+	// Start the API server in a goroutine. Needs to be in a goroutine to allow for the cron job to run,
+	// otherwise it blocks the main goroutine
+	go func() {
+		s.Start()
+	}()
+
+	// Set up the cron job
+	c := cron.New()
+
+	// The cron job runs once a day, see https://github.com/robfig/cron/blob/master/doc.go
+	// to test it running once a minute, replace "@daily" for "* * * * *"
+	c.AddFunc("@daily", func() {
+		apiCron.RemoveOldSignatures(dbCollection)
+	})
+	c.Start()
+
+	// Set up signal handling for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan // Block until a signal is received
+
+	// Stop the cron job
+	c.Stop()
+
+	// Shutdown the HTTP server gracefully with a given timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := s.Shutdown(ctx); err != nil {
+		logger.Error("Failed to shut down server gracefully: " + fmt.Sprintln(err))
+	}
+
+	logger.Info("Server shut down")
 }
