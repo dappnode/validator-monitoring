@@ -43,32 +43,33 @@ services:
     depends_on:
       flyway:
         condition: service_completed_successfully
+    container_name: web3signer
+    restart: always
+    volumes:
+      - "signer_data:/app/web3signer"
     networks:
       dncore_network:
         aliases:
           - web3signer.web3signer-holesky.dappnode
-    restart: always
 
   flyway:
     build:
       context: web3signer/flyway
       dockerfile: Dockerfile
+    container_name: flyway
+    depends_on:
+      postgres:
+        condition: service_started
     networks:
       dncore_network:
         aliases:
           - flyway.web3signer.dappnode
-    depends_on:
-      postgres:
-        condition: service_started
 
   postgres:
     build:
       context: web3signer/postgres
       dockerfile: Dockerfile
-    networks:
-      dncore_network:
-        aliases:
-          - postgres.web3signer.dappnode
+    container_name: postgres
     user: postgres
     healthcheck:
       test: pg_isready -U postgres
@@ -76,17 +77,23 @@ services:
       timeout: 5s
       retries: 5
     restart: always
+    networks:
+      dncore_network:
+        aliases:
+          - postgres.web3signer.dappnode
 
   brain:
     build:
       context: web3signer/brain
       dockerfile: Dockerfile
+    container_name: brain
+    restart: always
+    volumes:
+      - "brain_data:/app/data"
     networks:
       dncore_network:
         aliases:
           - brain.web3signer.dappnode
-    volumes:
-      - "brain_data:/app/data"
 
 networks:
   dncore_network:
@@ -94,5 +101,6 @@ networks:
     external: true
 
 volumes:
+  signer_data: {}
   brain_data: {}
   mongo_data: {}
