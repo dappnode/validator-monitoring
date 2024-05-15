@@ -9,7 +9,7 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-func TestIsValidSignature(t *testing.T) {
+func TestVerifySignature(t *testing.T) {
 	// Initialize BLS
 	if err := bls.Init(bls.BLS12_381); err != nil {
 		t.Fatalf("Failed to initialize BLS: %v", err)
@@ -46,7 +46,7 @@ func TestIsValidSignature(t *testing.T) {
 	}
 
 	// Validate the signature
-	isValid, err := IsValidSignature(req)
+	isValid, err := VerifySignature(req)
 	if err != nil {
 		t.Errorf("IsValidSignature returned an error: %v", err)
 	}
@@ -55,8 +55,8 @@ func TestIsValidSignature(t *testing.T) {
 	}
 }
 
-// TestIsValidSignatureError tests the IsValidSignature function for expected errors
-func TestIsValidSignatureError(t *testing.T) {
+// TestVerifySignatureError tests the IsValidSignature function for expected errors
+func TestVerifySignatureError(t *testing.T) {
 	// Initialize BLS just as in normal tests
 	if err := bls.Init(bls.BLS12_381); err != nil {
 		t.Fatalf("Failed to initialize BLS: %v", err)
@@ -88,7 +88,7 @@ func TestIsValidSignatureError(t *testing.T) {
 	}
 
 	// Validate the signature
-	isValid, err := IsValidSignature(req)
+	isValid, err := VerifySignature(req)
 	if err == nil {
 		t.Errorf("Expected an error for invalid signature data, but got none")
 	}
