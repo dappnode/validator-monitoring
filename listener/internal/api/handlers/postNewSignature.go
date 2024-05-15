@@ -89,6 +89,9 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 				"entries": bson.M{
 					"payload":   req.Payload,
 					"signature": req.Signature,
+					"decodedPayload": bson.M{
+						"timestamp": req.DecodedPayload.Timestamp, // Needed to filter out old signatures
+					},
 				},
 			},
 		}
