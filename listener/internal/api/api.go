@@ -37,7 +37,7 @@ func (s *httpApi) Start() {
 	var err error
 
 	// connect to the MongoDB server
-	dbClient, err := mongodb.ConnectMongoDB(s.dbUri)
+	dbClient, err := mongodb.GetMongoDbClient(s.dbUri)
 	if err != nil {
 		logger.Fatal("Failed to connect to MongoDB: " + err.Error())
 	}

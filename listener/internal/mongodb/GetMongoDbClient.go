@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func ConnectMongoDB(uri string) (*mongo.Client, error) {
+func GetMongoDbClient(uri string) (*mongo.Client, error) {
 	// The URI includes the credentials
 	var client *mongo.Client
 	var err error // Declare err here to ensure it's accessible outside the loop

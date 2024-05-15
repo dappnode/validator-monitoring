@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"sync"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 	"github.com/dappnode/validator-monitoring/listener/internal/api/validation"
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Posting a new singature consists in the following steps:
@@ -77,26 +77,28 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		return
 	}
 
-	// Iterate over all active validators and validate and insert the signature
-	dbMutex := new(sync.Mutex) // Mutex for database operations
+	// Iterate over all valid signatures and insert the signature
 	for _, req := range validSignatures {
-		dbMutex.Lock()
-		// Do we really need to lock the db insertions?
-		// Insert into MongoDB if signature is valid
-		_, err = dbCollection.InsertOne(context.TODO(), bson.M{
-			"platform":  req.DecodedPayload.Platform,
-			"timestamp": req.DecodedPayload.Timestamp,
-			"pubkey":    req.Pubkey,
-			"signature": req.Signature,
-			"network":   req.Network,
-			"tag":       req.Tag,
-		})
+		filter := bson.M{
+			"pubkey":  req.Pubkey,
+			"tag":     req.Tag,
+			"network": req.Network,
+		}
+		update := bson.M{
+			"$push": bson.M{
+				"entries": bson.M{
+					"payload":   req.Payload,
+					"signature": req.Signature,
+				},
+			},
+		}
+		options := options.Update().SetUpsert(true)
+		_, err := dbCollection.UpdateOne(context.TODO(), filter, update, options)
 		if err != nil {
 			logger.Error("Failed to insert signature into MongoDB: " + err.Error())
 			continue
 		}
 		logger.Debug("New Signature " + req.Signature + " inserted into MongoDB")
-		dbMutex.Unlock()
 	}
 
 	respondOK(w, "Finished processing signatures")
