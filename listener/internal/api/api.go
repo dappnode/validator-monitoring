@@ -6,7 +6,6 @@ import (
 	"github.com/dappnode/validator-monitoring/listener/internal/api/routes"
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 	"github.com/dappnode/validator-monitoring/listener/internal/mongodb"
-	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
 type httpApi struct {
@@ -47,15 +46,6 @@ func (s *httpApi) Start() {
 	dbCollection := dbClient.Database("validatorMonitoring").Collection("signatures")
 	if dbCollection == nil {
 		logger.Fatal("Failed to connect to MongoDB collection")
-	}
-
-	// This is a configuration of the BLS library at the process level. Notice how bls.Init() does not return an initialized BLS object.
-	// Any call to bls functions within the process will use this configuration. We initialize bls before starting the api.
-	if err := bls.Init(bls.BLS12_381); err != nil {
-		logger.Fatal("Failed to initialize BLS: " + err.Error())
-	}
-	if err := bls.SetETHmode(bls.EthModeDraft07); err != nil {
-		logger.Fatal("Failed to set BLS ETH mode: " + err.Error())
 	}
 
 	// setup the http api
