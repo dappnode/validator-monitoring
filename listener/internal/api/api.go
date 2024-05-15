@@ -29,12 +29,12 @@ func NewApi(port string, dbClient *mongo.Client, dbCollection *mongo.Collection,
 }
 
 func (s *httpApi) Start() {
+	logger.Info("Server is running on port " + s.port)
+
 	// if somehow s.server is not nil, it means the server is already running, this should never happen
 	if s.server != nil {
 		logger.Fatal("HTTP server already started")
 	}
-
-	logger.Info("Server is running on port " + s.port)
 
 	s.server = &http.Server{
 		Addr:    ":" + s.port,
