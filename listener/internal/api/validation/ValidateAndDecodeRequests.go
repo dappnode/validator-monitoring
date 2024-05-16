@@ -27,11 +27,13 @@ func ValidateAndDecodeRequests(requests []types.SignatureRequest) ([]types.Signa
 		}
 		validRequests = append(validRequests, types.SignatureRequestDecoded{
 			DecodedPayload: decodedPayload,
-			Payload:        req.Payload,
-			Pubkey:         req.Pubkey,
-			Signature:      req.Signature,
-			Network:        req.Network,
-			Tag:            req.Tag,
+			SignatureRequest: types.SignatureRequest{
+				Payload:   req.Payload,
+				Pubkey:    req.Pubkey,
+				Signature: req.Signature,
+				Network:   req.Network,
+				Tag:       req.Tag,
+			},
 		})
 	}
 	return validRequests, nil
@@ -64,6 +66,8 @@ func isValidCodedRequest(req *types.SignatureRequest) bool {
 		logger.Debug("Received Invalid Request: Public key is not a valid BLS key.")
 		return false
 	}
+
+	// TODO: verify also signature
 
 	return true
 }

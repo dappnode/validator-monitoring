@@ -51,7 +51,6 @@ func main() {
 		dbClient,
 		dbCollection,
 		config.BeaconNodeURLs,
-		config.BypassValidatorsFiltering,
 	)
 
 	// Start the API server in a goroutine. Needs to be in a goroutine to allow for the cron job to run,

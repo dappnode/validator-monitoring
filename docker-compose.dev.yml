@@ -86,7 +86,6 @@ services:
     build:
       context: web3signer/brain
       dockerfile: Dockerfile
-    container_name: brain
     restart: always
     volumes:
       - "brain_data:/app/data"

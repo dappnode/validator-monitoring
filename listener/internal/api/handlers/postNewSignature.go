@@ -17,7 +17,7 @@ import (
 // 1. Decode and validate
 // 2. Get active validators
 // 3. Validate signature and insert into MongoDB
-func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[string]string, bypassValidatorFiltering bool) {
+func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[string]string) {
 	logger.Debug("Received new POST '/newSignature' request")
 
 	// Parse request body
@@ -48,17 +48,18 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		return
 	}
 
-	// if bypassValidatorFiltering is true, we skip the active validators check
-	activeValidators := validRequests
-	if !bypassValidatorFiltering {
-		activeValidators = validation.GetActiveValidators(validRequests, beaconNodeUrl)
+	activeValidators, err := validation.GetActiveValidators(validRequests, beaconNodeUrl)
+	if err != nil {
+		logger.Error("Failed to get active validators: " + err.Error())
+		respondError(w, http.StatusInternalServerError, "Failed to get active validators")
+		return
 	}
 	if len(activeValidators) == 0 {
 		respondError(w, http.StatusInternalServerError, "No active validators found in network")
 		return
 	}
 
-	validSignatures := []types.SignatureRequestDecoded{}
+	validSignatures := []types.SignatureRequestDecodedWithActive{}
 	for _, req := range activeValidators {
 		isValidSignature, err := validation.VerifySignature(req)
 		if err != nil {
@@ -85,6 +86,9 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 			"network": req.Network,
 		}
 		update := bson.M{
+			"$set": bson.M{
+				"status": req.Status, // Only save the last status
+			},
 			"$push": bson.M{
 				"entries": bson.M{
 					"payload":   req.Payload,
