@@ -48,8 +48,12 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		return
 	}
 
-	activeValidators := validation.GetActiveValidators(validRequests, beaconNodeUrl)
-	// TODO: return error and response the error to the client
+	activeValidators, err := validation.GetActiveValidators(validRequests, beaconNodeUrl)
+	if err != nil {
+		logger.Error("Failed to get active validators: " + err.Error())
+		respondError(w, http.StatusInternalServerError, "Failed to get active validators")
+		return
+	}
 	if len(activeValidators) == 0 {
 		respondError(w, http.StatusInternalServerError, "No active validators found in network")
 		return

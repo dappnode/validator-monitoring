@@ -35,10 +35,10 @@ type activeValidatorsApiResponse struct {
 }
 
 // GetActiveValidators checks the active status of validators from a specific beacon node.
-func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrl string) []types.SignatureRequestDecodedWithActive {
+func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrl string) ([]types.SignatureRequestDecodedWithActive, error) {
 	if len(requestsDecoded) == 0 {
-		logger.Warn("No requests to process")
-		return nil
+		logger.Warn("No requests to process to retrieve active validators")
+		return nil, fmt.Errorf("No requests to process to retrieve active validators")
 	}
 
 	ids := make([]string, 0, len(requestsDecoded))
@@ -47,7 +47,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	}
 	if len(ids) == 0 {
 		logger.Warn("No valid public keys for network " + beaconNodeUrl + " to query")
-		return nil
+		return nil, fmt.Errorf("No valid public keys for network " + beaconNodeUrl + " to query")
 	}
 
 	// Serialize the request body to JSON
@@ -62,7 +62,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	})
 	if err != nil {
 		logger.Error("Failed to serialize request data: " + err.Error())
-		return nil
+		return nil, err
 	}
 
 	// Create HTTP client with timeout
@@ -74,7 +74,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	if err != nil {
 		logger.Error("error making API call to " + apiUrl + ": " + err.Error())
 		// if the api call fails return signatures with status unknown
-		return GetSignatureRequestsDecodedWithUnknown(requestsDecoded)
+		return GetSignatureRequestsDecodedWithUnknown(requestsDecoded), nil
 	}
 	defer resp.Body.Close()
 
@@ -82,20 +82,20 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	// if its internal server error return unknown since we expect the cron to eventually resolve the status once the server is back up
 	if resp.StatusCode >= 500 && resp.StatusCode < 600 {
 		logger.Error("internal server error, returning signatures with status unknown: " + resp.Status)
-		return GetSignatureRequestsDecodedWithUnknown(requestsDecoded)
+		return GetSignatureRequestsDecodedWithUnknown(requestsDecoded), nil
 	}
 
 	// Check the HTTP response status before reading the body and return nil if not ok
 	if resp.StatusCode != http.StatusOK {
-		logger.Error("unexpected response status from beacon node: " + resp.Status)
-		return nil
+		logger.Error("unexpected response status from beacon node when retrieving active validators: " + resp.Status)
+		return nil, fmt.Errorf("unexpected response status from beacon node when retrieving active validators: " + resp.Status)
 	}
 
 	// Decode the API response directly into the ApiResponse struct
 	var apiResponse activeValidatorsApiResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
-		logger.Error("error decoding response data: " + err.Error())
-		return nil
+		logger.Error("error decoding response data from beacon node: " + err.Error())
+		return nil, err
 	}
 
 	// Use a map to quickly lookup active validators
@@ -118,7 +118,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 		}
 	}
 
-	return activeValidators
+	return activeValidators, nil
 }
 
 // Append "unknown" status to all requests
