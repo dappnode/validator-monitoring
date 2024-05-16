@@ -11,22 +11,20 @@ import (
 )
 
 type httpApi struct {
-	server                   *http.Server
-	port                     string
-	dbClient                 *mongo.Client
-	dbCollection             *mongo.Collection
-	beaconNodeUrls           map[string]string
-	bypassValidatorFiltering bool
+	server         *http.Server
+	port           string
+	dbClient       *mongo.Client
+	dbCollection   *mongo.Collection
+	beaconNodeUrls map[string]string
 }
 
 // create a new api instance
-func NewApi(port string, dbClient *mongo.Client, dbCollection *mongo.Collection, beaconNodeUrls map[string]string, bypassValidatorFiltering bool) *httpApi {
+func NewApi(port string, dbClient *mongo.Client, dbCollection *mongo.Collection, beaconNodeUrls map[string]string) *httpApi {
 	return &httpApi{
-		port:                     port,
-		dbClient:                 dbClient,
-		dbCollection:             dbCollection,
-		beaconNodeUrls:           beaconNodeUrls,
-		bypassValidatorFiltering: bypassValidatorFiltering,
+		port:           port,
+		dbClient:       dbClient,
+		dbCollection:   dbCollection,
+		beaconNodeUrls: beaconNodeUrls,
 	}
 }
 
@@ -40,7 +38,7 @@ func (s *httpApi) Start() {
 
 	s.server = &http.Server{
 		Addr:    ":" + s.port,
-		Handler: routes.SetupRouter(s.dbCollection, s.beaconNodeUrls, s.bypassValidatorFiltering),
+		Handler: routes.SetupRouter(s.dbCollection, s.beaconNodeUrls),
 	}
 
 	// ListenAndServe returns ErrServerClosed to indicate that the server has been shut down when the server is closed gracefully. We need to

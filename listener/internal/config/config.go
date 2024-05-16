@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 )
@@ -16,8 +15,6 @@ type Config struct {
 	MongoDBURI string
 	// LogLevel is the level of logging
 	LogLevel string
-	// BypassValidatorsFiltering is a boolean that indicates if the validators filtering should be bypassed
-	BypassValidatorsFiltering bool
 	// BeaconNodeURLs is the URLs of the beacon nodes for different networks
 	BeaconNodeURLs map[string]string
 }
@@ -34,14 +31,6 @@ func LoadConfig() (*Config, error) {
 		logger.Info("API_PORT is not set, using default 8080")
 		apiPort = "8080"
 	}
-
-	// Load bypassValidatorsFiltering boolean from env. Defaults to false unless explicitly set to "true".
-	bypassValidatorsFilteringStr := os.Getenv("BYPASS_VALIDATORS_FILTERING")
-	if bypassValidatorsFilteringStr == "" {
-		logger.Info("BYPASS_VALIDATORS_FILTERING is not set, using default false")
-		bypassValidatorsFilteringStr = "false"
-	}
-	bypassValidatorsFiltering := strings.ToLower(bypassValidatorsFilteringStr) == "true"
 
 	mongoDBURI := os.Getenv("MONGO_DB_URI")
 	if mongoDBURI == "" {
@@ -67,7 +56,7 @@ func LoadConfig() (*Config, error) {
 	}
 
 	// print all envs in a single line
-	logger.Info("Loaded config: LOG_LEVEL=" + logLevel + " API_PORT=" + apiPort + " MONGO_DB_URI=" + mongoDBURI + " BYPASS_VALIDATORS_FILTERING=" + bypassValidatorsFilteringStr + " BEACON_NODE_URL_MAINNET=" + beaconMainnet + " BEACON_NODE_URL_HOLESKY=" + beaconHolesky + " BEACON_NODE_URL_GNOSIS=" + beaconGnosis + " BEACON_NODE_URL_LUKSO=" + beaconLukso)
+	logger.Info("Loaded config: LOG_LEVEL=" + logLevel + " API_PORT=" + apiPort + " MONGO_DB_URI=" + mongoDBURI + " BEACON_NODE_URL_MAINNET=" + beaconMainnet + " BEACON_NODE_URL_HOLESKY=" + beaconHolesky + " BEACON_NODE_URL_GNOSIS=" + beaconGnosis + " BEACON_NODE_URL_LUKSO=" + beaconLukso)
 
 	beaconNodeURLs := map[string]string{
 		"mainnet": beaconMainnet,
@@ -77,10 +66,9 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Port:                      apiPort,
-		MongoDBURI:                mongoDBURI,
-		LogLevel:                  logLevel,
-		BypassValidatorsFiltering: bypassValidatorsFiltering,
-		BeaconNodeURLs:            beaconNodeURLs,
+		Port:           apiPort,
+		MongoDBURI:     mongoDBURI,
+		LogLevel:       logLevel,
+		BeaconNodeURLs: beaconNodeURLs,
 	}, nil
 }

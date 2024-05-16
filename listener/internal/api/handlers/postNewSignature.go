@@ -17,7 +17,7 @@ import (
 // 1. Decode and validate
 // 2. Get active validators
 // 3. Validate signature and insert into MongoDB
-func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[string]string, bypassValidatorFiltering bool) {
+func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[string]string) {
 	logger.Debug("Received new POST '/newSignature' request")
 
 	// Parse request body
@@ -48,11 +48,7 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		return
 	}
 
-	// if bypassValidatorFiltering is true, we skip the active validators check
-	activeValidators := validRequests
-	if !bypassValidatorFiltering {
-		activeValidators = validation.GetActiveValidators(validRequests, beaconNodeUrl)
-	}
+	activeValidators := validation.GetActiveValidators(validRequests, beaconNodeUrl)
 	if len(activeValidators) == 0 {
 		respondError(w, http.StatusInternalServerError, "No active validators found in network")
 		return

@@ -34,7 +34,6 @@ type activeValidatorsApiResponse struct {
 }
 
 // GetActiveValidators checks the active status of validators from a specific beacon node.
-// If bypass is true, it simply returns all decoded requests.
 func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrl string) []types.SignatureRequestDecoded {
 	if len(requestsDecoded) == 0 {
 		fmt.Println("no requests to process")
