@@ -90,6 +90,7 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 						"platform":  req.DecodedPayload.Platform,
 						"timestamp": req.DecodedPayload.Timestamp, // Needed to filter out old signatures
 					},
+					"status": req.Status,
 				},
 			},
 		}
