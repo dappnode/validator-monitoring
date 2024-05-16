@@ -46,7 +46,7 @@ func TestVerifySignature(t *testing.T) {
 				Network:   "mainnet",
 				Tag:       "solo"},
 		},
-		Status: "active",
+		Status: types.Active,
 	}
 
 	// Validate the signature
@@ -93,7 +93,7 @@ func TestVerifySignatureError(t *testing.T) {
 				Tag:       "solo",
 			},
 		},
-		Status: "active",
+		Status: types.Active,
 	}
 
 	// Validate the signature

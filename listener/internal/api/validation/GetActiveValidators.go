@@ -110,7 +110,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 		if _, isActive := activeValidatorMap[req.Pubkey]; isActive {
 			activeValidators = append(activeValidators, types.SignatureRequestDecodedWithActive{
 				SignatureRequestDecoded: req,
-				Status:                  "active",
+				Status:                  types.Active,
 			})
 		} else {
 			// do not append inactive validators
@@ -127,7 +127,7 @@ func GetSignatureRequestsDecodedWithUnknown(requests []types.SignatureRequestDec
 	for _, req := range requests {
 		signatureRequestsDecodedWithActive = append(signatureRequestsDecodedWithActive, types.SignatureRequestDecodedWithActive{
 			SignatureRequestDecoded: req,
-			Status:                  "unknown",
+			Status:                  types.Unknown,
 		})
 	}
 	return signatureRequestsDecodedWithActive

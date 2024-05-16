@@ -13,9 +13,18 @@ type SignatureRequestDecoded struct {
 	SignatureRequest
 }
 
+type Status string
+
+// create enum with status
+const (
+	Unknown  Status = "unknown"
+	Active   Status = "active"
+	Inactive Status = "inactive"
+)
+
 type SignatureRequestDecodedWithActive struct {
 	SignatureRequestDecoded
-	Status string `json:"status"` // "unknown" | "active" | "inactive"
+	Status Status `json:"status"` // "unknown" | "active" | "inactive"
 }
 
 type DecodedPayload struct {
