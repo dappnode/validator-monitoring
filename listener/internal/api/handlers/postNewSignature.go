@@ -49,6 +49,7 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 	}
 
 	activeValidators := validation.GetActiveValidators(validRequests, beaconNodeUrl)
+	// TODO: return error and response the error to the client
 	if len(activeValidators) == 0 {
 		respondError(w, http.StatusInternalServerError, "No active validators found in network")
 		return
@@ -82,6 +83,7 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		}
 		update := bson.M{
 			"$push": bson.M{
+				"status": req.Status,
 				"entries": bson.M{
 					"payload":   req.Payload,
 					"signature": req.Signature,
@@ -90,7 +92,6 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 						"platform":  req.DecodedPayload.Platform,
 						"timestamp": req.DecodedPayload.Timestamp, // Needed to filter out old signatures
 					},
-					"status": req.Status,
 				},
 			},
 		}

@@ -45,7 +45,6 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	for _, req := range requestsDecoded {
 		ids = append(ids, req.Pubkey)
 	}
-
 	if len(ids) == 0 {
 		logger.Warn("No valid public keys for network " + beaconNodeUrl + " to query")
 		return nil
@@ -53,6 +52,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 
 	// Serialize the request body to JSON
 	// See https://ethereum.github.io/beacon-APIs/#/Beacon/postStateValidators
+	// returns only active validators
 	jsonData, err := json.Marshal(struct {
 		Ids      []string `json:"ids"`
 		Statuses []string `json:"statuses"`
@@ -66,7 +66,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	}
 
 	// Create HTTP client with timeout
-	client := &http.Client{Timeout: 50 * time.Second}
+	client := &http.Client{Timeout: 10 * time.Second}
 	apiUrl := fmt.Sprintf("%s/eth/v1/beacon/states/head/validators", beaconNodeUrl)
 
 	// Make API call
@@ -78,7 +78,14 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	}
 	defer resp.Body.Close()
 
-	// Check the HTTP response status before reading the body
+	// check if its any server error 5xx
+	// if its internal server error return unknown since we expect the cron to eventually resolve the status once the server is back up
+	if resp.StatusCode >= 500 && resp.StatusCode < 600 {
+		logger.Error("internal server error, returning signatures with status unknown: " + resp.Status)
+		return GetSignatureRequestsDecodedWithUnknown(requestsDecoded)
+	}
+
+	// Check the HTTP response status before reading the body and return nil if not ok
 	if resp.StatusCode != http.StatusOK {
 		logger.Error("unexpected response status from beacon node: " + resp.Status)
 		return nil

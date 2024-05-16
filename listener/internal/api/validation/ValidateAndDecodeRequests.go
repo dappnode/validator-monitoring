@@ -67,6 +67,8 @@ func isValidCodedRequest(req *types.SignatureRequest) bool {
 		return false
 	}
 
+	// TODO: verify also signature
+
 	return true
 }
 
