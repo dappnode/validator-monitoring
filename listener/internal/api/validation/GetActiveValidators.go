@@ -65,6 +65,9 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 		return nil, err
 	}
 
+	// Start timing the request
+	startTime := time.Now()
+
 	// Create HTTP client with timeout
 	client := &http.Client{Timeout: 10 * time.Second}
 	apiUrl := fmt.Sprintf("%s/eth/v1/beacon/states/head/validators", beaconNodeUrl)
@@ -77,6 +80,10 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 		return GetSignatureRequestsDecodedWithUnknown(requestsDecoded), nil
 	}
 	defer resp.Body.Close()
+
+	// Just after resp or error is received, log how much time passed
+	duration := time.Since(startTime)
+	logger.Info(fmt.Sprintf("API response time for %s: %v seconds", apiUrl, duration.Seconds()))
 
 	// check if its any server error 5xx
 	// if its internal server error return unknown since we expect the cron to eventually resolve the status once the server is back up
