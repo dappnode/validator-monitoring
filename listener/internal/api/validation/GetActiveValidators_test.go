@@ -34,7 +34,7 @@ func TestGetActiveValidators(t *testing.T) {
 		},
 	}
 
-	result := GetActiveValidators(requestsDecoded, beaconNodeUrls["holesky"])
+	result, _ := GetActiveValidators(requestsDecoded, beaconNodeUrls["holesky"])
 
 	// You may need to mock the server's response or adjust the expected values here according to your actual setup
 	expectedNumValidators := 3 // This should match the number of mock validators that are "active"
