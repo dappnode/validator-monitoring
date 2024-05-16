@@ -86,8 +86,10 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 			"network": req.Network,
 		}
 		update := bson.M{
+			"$set": bson.M{
+				"status": req.Status, // Only save the last status
+			},
 			"$push": bson.M{
-				"status": req.Status,
 				"entries": bson.M{
 					"payload":   req.Payload,
 					"signature": req.Signature,
