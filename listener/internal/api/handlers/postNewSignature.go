@@ -54,7 +54,7 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		return
 	}
 
-	validSignatures := []types.SignatureRequestDecoded{}
+	validSignatures := []types.SignatureRequestDecodedWithActive{}
 	for _, req := range activeValidators {
 		isValidSignature, err := validation.VerifySignature(req)
 		if err != nil {

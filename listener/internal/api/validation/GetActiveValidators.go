@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
+	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 )
 
 type activeValidator struct {
@@ -34,9 +35,9 @@ type activeValidatorsApiResponse struct {
 }
 
 // GetActiveValidators checks the active status of validators from a specific beacon node.
-func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrl string) []types.SignatureRequestDecoded {
+func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beaconNodeUrl string) []types.SignatureRequestDecodedWithActive {
 	if len(requestsDecoded) == 0 {
-		fmt.Println("no requests to process")
+		logger.Warn("No requests to process")
 		return nil
 	}
 
@@ -46,7 +47,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	}
 
 	if len(ids) == 0 {
-		fmt.Println("no valid public keys for network ", beaconNodeUrl, " to query")
+		logger.Warn("No valid public keys for network " + beaconNodeUrl + " to query")
 		return nil
 	}
 
@@ -60,7 +61,7 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 		Statuses: []string{"active_ongoing"}, // Only interested in currently active validators
 	})
 	if err != nil {
-		fmt.Printf("error marshaling request data: %v\n", err)
+		logger.Error("Failed to serialize request data: " + err.Error())
 		return nil
 	}
 
@@ -71,21 +72,22 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	// Make API call
 	resp, err := client.Post(apiUrl, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		fmt.Printf("error making API call to %s: %v\n", apiUrl, err)
-		return nil
+		logger.Error("error making API call to " + apiUrl + ": " + err.Error())
+		// if the api call fails return signatures with status unknown
+		return GetSignatureRequestsDecodedWithUnknown(requestsDecoded)
 	}
 	defer resp.Body.Close()
 
 	// Check the HTTP response status before reading the body
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("unexpected response status: %d\n", resp.StatusCode)
+		logger.Error("unexpected response status from beacon node: " + resp.Status)
 		return nil
 	}
 
 	// Decode the API response directly into the ApiResponse struct
 	var apiResponse activeValidatorsApiResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
-		fmt.Printf("error decoding response data: %v\n", err)
+		logger.Error("error decoding response data: " + err.Error())
 		return nil
 	}
 
@@ -96,12 +98,30 @@ func GetActiveValidators(requestsDecoded []types.SignatureRequestDecoded, beacon
 	}
 
 	// Filter the list of decoded requests to include only those that are active
-	var activeValidators []types.SignatureRequestDecoded
+	var activeValidators []types.SignatureRequestDecodedWithActive
 	for _, req := range requestsDecoded {
 		if _, isActive := activeValidatorMap[req.Pubkey]; isActive {
-			activeValidators = append(activeValidators, req)
+			activeValidators = append(activeValidators, types.SignatureRequestDecodedWithActive{
+				SignatureRequestDecoded: req,
+				Status:                  "active",
+			})
+		} else {
+			// do not append inactive validators
+			logger.Warn("Inactive validator: " + req.Pubkey)
 		}
 	}
 
 	return activeValidators
+}
+
+// Append "unknown" status to all requests
+func GetSignatureRequestsDecodedWithUnknown(requests []types.SignatureRequestDecoded) []types.SignatureRequestDecodedWithActive {
+	var signatureRequestsDecodedWithActive []types.SignatureRequestDecodedWithActive
+	for _, req := range requests {
+		signatureRequestsDecodedWithActive = append(signatureRequestsDecodedWithActive, types.SignatureRequestDecodedWithActive{
+			SignatureRequestDecoded: req,
+			Status:                  "unknown",
+		})
+	}
+	return signatureRequestsDecodedWithActive
 }

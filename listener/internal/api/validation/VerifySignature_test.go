@@ -36,13 +36,17 @@ func TestVerifySignature(t *testing.T) {
 	signature := secretKey.SignByte(messageBytes)
 
 	// Prepare the request
-	req := types.SignatureRequestDecoded{
-		DecodedPayload: decodedPayload,
-		Pubkey:         publicKey.SerializeToHexStr(),
-		Payload:        base64.StdEncoding.EncodeToString(messageBytes),
-		Signature:      signature.SerializeToHexStr(),
-		Network:        "mainnet",
-		Tag:            "solo",
+	req := types.SignatureRequestDecodedWithActive{
+		SignatureRequestDecoded: types.SignatureRequestDecoded{
+			DecodedPayload: decodedPayload,
+			SignatureRequest: types.SignatureRequest{
+				Pubkey:    publicKey.SerializeToHexStr(),
+				Payload:   base64.StdEncoding.EncodeToString(messageBytes),
+				Signature: signature.SerializeToHexStr(),
+				Network:   "mainnet",
+				Tag:       "solo"},
+		},
+		Status: "active",
 	}
 
 	// Validate the signature
@@ -78,13 +82,18 @@ func TestVerifySignatureError(t *testing.T) {
 	}
 
 	// Create the SignatureRequestDecoded with a bad signature to ensure it fails
-	req := types.SignatureRequestDecoded{
-		DecodedPayload: decodedPayload,
-		Pubkey:         badPublicKey,
-		Payload:        base64.StdEncoding.EncodeToString(payloadBytes),
-		Signature:      "clearlyInvalidSignature", // Intentionally invalid
-		Network:        "mainnet",
-		Tag:            "solo",
+	req := types.SignatureRequestDecodedWithActive{
+		SignatureRequestDecoded: types.SignatureRequestDecoded{
+			DecodedPayload: decodedPayload,
+			SignatureRequest: types.SignatureRequest{
+				Pubkey:    badPublicKey,
+				Payload:   base64.StdEncoding.EncodeToString(payloadBytes),
+				Signature: "clearlyInvalidSignature",
+				Network:   "mainnet",
+				Tag:       "solo",
+			},
+		},
+		Status: "active",
 	}
 
 	// Validate the signature
