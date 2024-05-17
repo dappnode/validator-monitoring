@@ -13,6 +13,8 @@ services:
       BEACON_NODE_URL_HOLESKY: ${BEACON_NODE_URL_HOLESKY}
       BEACON_NODE_URL_LUKSO: ${BEACON_NODE_URL_LUKSO}
       BEACON_NODE_URL_GNOSIS: ${BEACON_NODE_URL_GNOSIS}
+    volumes:
+      - ./jwt:/jwt
     depends_on:
       - mongo
     container_name: listener

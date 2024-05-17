@@ -1,3 +1,4 @@
 .env
 ./listener/tmp/*
 ./listener/bin/*
+jwt

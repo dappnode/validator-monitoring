@@ -1,5 +1,11 @@
 package types
 
+type GetSignatureParams struct {
+	Network string `json:"network"`
+	Tag     string `json:"tag"`
+	Hours   int    `json:"hours"`
+}
+
 type SignatureRequest struct {
 	Payload   string `json:"payload"`
 	Pubkey    string `json:"pubkey"`
