@@ -1,11 +1,20 @@
 package types
 
+type Network string // "mainnet" | "holesky" | "gnosis" | "lukso"
+
+const (
+	Mainnet Network = "mainnet"
+	Holesky Network = "holesky"
+	Gnosis  Network = "gnosis"
+	Lukso   Network = "lukso"
+)
+
 type SignatureRequest struct {
-	Payload   string `json:"payload"`
-	Pubkey    string `json:"pubkey"`
-	Signature string `json:"signature"`
-	Network   string `json:"network"`
-	Tag       string `json:"tag"`
+	Payload   string  `json:"payload"`
+	Pubkey    string  `json:"pubkey"`
+	Signature string  `json:"signature"`
+	Network   Network `json:"network"`
+	Tag       string  `json:"tag"`
 }
 
 type SignatureRequestDecoded struct {

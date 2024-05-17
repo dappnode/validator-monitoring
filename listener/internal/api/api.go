@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/routes"
+	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -15,11 +16,11 @@ type httpApi struct {
 	port           string
 	dbClient       *mongo.Client
 	dbCollection   *mongo.Collection
-	beaconNodeUrls map[string]string
+	beaconNodeUrls map[types.Network]string
 }
 
 // create a new api instance
-func NewApi(port string, dbClient *mongo.Client, dbCollection *mongo.Collection, beaconNodeUrls map[string]string) *httpApi {
+func NewApi(port string, dbClient *mongo.Client, dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string) *httpApi {
 	return &httpApi{
 		port:           port,
 		dbClient:       dbClient,

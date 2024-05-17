@@ -17,7 +17,7 @@ import (
 // 1. Decode and validate
 // 2. Get active validators
 // 3. Validate signature and insert into MongoDB
-func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[string]string) {
+func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string) {
 	logger.Debug("Received new POST '/newSignature' request")
 
 	// Parse request body
@@ -41,7 +41,6 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 		return
 	}
 
-	// Get active validators from the network, get the network from the first item in the array
 	beaconNodeUrl, ok := beaconNodeUrls[validRequests[0].Network]
 	if !ok {
 		respondError(w, http.StatusBadRequest, "Invalid network")
