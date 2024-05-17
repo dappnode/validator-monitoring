@@ -36,7 +36,7 @@ func TestVerifySignature(t *testing.T) {
 	signature := secretKey.SignByte(messageBytes)
 
 	// Prepare the request
-	req := types.SignatureRequestDecodedWithActive{
+	req := types.SignatureRequestDecodedWithStatus{
 		SignatureRequestDecoded: types.SignatureRequestDecoded{
 			DecodedPayload: decodedPayload,
 			SignatureRequest: types.SignatureRequest{
@@ -82,7 +82,7 @@ func TestVerifySignatureError(t *testing.T) {
 	}
 
 	// Create the SignatureRequestDecoded with a bad signature to ensure it fails
-	req := types.SignatureRequestDecodedWithActive{
+	req := types.SignatureRequestDecodedWithStatus{
 		SignatureRequestDecoded: types.SignatureRequestDecoded{
 			DecodedPayload: decodedPayload,
 			SignatureRequest: types.SignatureRequest{

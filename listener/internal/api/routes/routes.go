@@ -4,11 +4,12 @@ import (
 	"net/http"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/handlers"
+	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[string]string) *mux.Router {
+func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string) *mux.Router {
 	r := mux.NewRouter()
 
 	// Define routes

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 )
 
@@ -16,7 +17,7 @@ type Config struct {
 	// LogLevel is the level of logging
 	LogLevel string
 	// BeaconNodeURLs is the URLs of the beacon nodes for different networks
-	BeaconNodeURLs map[string]string
+	BeaconNodeURLs map[types.Network]string
 }
 
 func LoadConfig() (*Config, error) {
@@ -58,11 +59,11 @@ func LoadConfig() (*Config, error) {
 	// print all envs in a single line
 	logger.Info("Loaded config: LOG_LEVEL=" + logLevel + " API_PORT=" + apiPort + " MONGO_DB_URI=" + mongoDBURI + " BEACON_NODE_URL_MAINNET=" + beaconMainnet + " BEACON_NODE_URL_HOLESKY=" + beaconHolesky + " BEACON_NODE_URL_GNOSIS=" + beaconGnosis + " BEACON_NODE_URL_LUKSO=" + beaconLukso)
 
-	beaconNodeURLs := map[string]string{
-		"mainnet": beaconMainnet,
-		"holesky": beaconHolesky,
-		"gnosis":  beaconGnosis,
-		"lukso":   beaconLukso,
+	beaconNodeURLs := map[types.Network]string{
+		types.Mainnet: beaconMainnet,
+		types.Holesky: beaconHolesky,
+		types.Gnosis:  beaconGnosis,
+		types.Lukso:   beaconLukso,
 	}
 
 	return &Config{
