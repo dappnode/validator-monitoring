@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func RemoveUnknownSignatures(collection *mongo.Collection, beaconNodeUrls map[types.Network]string) {
+func UpdateSignaturesStatus(collection *mongo.Collection, beaconNodeUrls map[types.Network]string) {
 	logger.Debug("Updating statuses and removing inactive signatures")
 
 	// Step 1: Query the MongoDB collection to retrieve all documents with status "unknown"

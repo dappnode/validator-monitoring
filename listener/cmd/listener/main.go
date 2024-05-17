@@ -70,7 +70,7 @@ func main() {
 
 	})
 	c.AddFunc("* * * * *", func() {
-		apiCron.RemoveUnknownSignatures(dbCollection, config.BeaconNodeURLs)
+		apiCron.UpdateSignaturesStatus(dbCollection, config.BeaconNodeURLs)
 	})
 	c.Start()
 
