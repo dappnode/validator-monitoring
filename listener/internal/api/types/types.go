@@ -50,7 +50,7 @@ type Status string
 const (
 	Unknown  Status = "unknown"
 	Active   Status = "active"
-	Inactive Status = "inactive"
+	Inactive Status = "inactive" // means any response from beacon node that is not active
 )
 
 type SignatureRequestDecodedWithStatus struct {

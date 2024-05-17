@@ -68,22 +68,14 @@ func GetValidatorsStatus(pubkeys []string, beaconNodeUrl string) (map[string]typ
 	resp, err := client.Post(apiUrl, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		logger.Error("Failed to make request to beacon node: " + err.Error())
-		// return the pubkeys to be stored with status unknown
-		for _, pubkey := range pubkeys {
-			statusMap[pubkey] = types.Unknown
-		}
-		return statusMap, nil
+		return getMapUnknown(pubkeys), nil
 	}
 	defer resp.Body.Close()
 
 	// Check if it's any server error 5xx
 	if resp.StatusCode >= 500 && resp.StatusCode < 600 {
 		logger.Error("internal server error due to server issue, keeping signatures to be stored with status unknown: " + resp.Status)
-		// return the pubkeys to be stored with status unknown
-		for _, pubkey := range pubkeys {
-			statusMap[pubkey] = types.Unknown
-		}
-		return statusMap, nil
+		return getMapUnknown(pubkeys), nil
 	}
 
 	// Check the HTTP response status before reading the body and return nil if not ok
@@ -105,4 +97,12 @@ func GetValidatorsStatus(pubkeys []string, beaconNodeUrl string) (map[string]typ
 	}
 
 	return statusMap, nil
+}
+
+func getMapUnknown(pubkeys []string) map[string]types.Status {
+	statusMap := make(map[string]types.Status)
+	for _, pubkey := range pubkeys {
+		statusMap[pubkey] = types.Unknown
+	}
+	return statusMap
 }
