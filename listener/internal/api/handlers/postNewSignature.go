@@ -106,7 +106,7 @@ func insertSignaturesIntoDB(signatures []types.SignatureRequestDecodedWithStatus
 			"network": req.Network,
 		}
 		update := bson.M{
-			"$set": bson.M{"status": req.Status},
+			"$setOnInsert": bson.M{"status": req.Status}, // do not update status if already exists
 			"$push": bson.M{
 				"entries": bson.M{
 					"payload":   req.Payload,
