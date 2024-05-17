@@ -11,6 +11,7 @@ import (
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // GetSignatures fetches signatures from MongoDB based on the network, tag, and timestamp criteria.
@@ -37,8 +38,14 @@ func GetSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.C
 		},
 	}
 
+	projection := bson.M{
+		"_id": 0, // Exclude the _id field
+	}
+
+	findOptions := options.Find().SetProjection(projection)
+
 	var results []bson.M
-	cursor, err := dbCollection.Find(context.Background(), filter)
+	cursor, err := dbCollection.Find(context.Background(), filter, findOptions)
 	if err != nil {
 		logger.Error("Failed to fetch signatures from MongoDB: " + err.Error())
 		respondError(w, http.StatusInternalServerError, "Failed to fetch signatures")
