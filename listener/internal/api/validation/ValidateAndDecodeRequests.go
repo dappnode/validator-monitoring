@@ -40,7 +40,7 @@ func ValidateAndDecodeRequests(requests []types.SignatureRequest) ([]types.Signa
 }
 
 // isValidCodedRequest checks if the request has all the required fields, the correct signature format, and a valid BLS pubkey
-// TODO: we should consider having an enum for Network and Tag fields and validate them as well.
+// TODO: validate network and tag against enums
 func isValidCodedRequest(req *types.SignatureRequest) bool {
 	// Check for any empty required fields
 	if req.Network == "" || req.Tag == "" || req.Signature == "" || req.Payload == "" || req.Pubkey == "" {
