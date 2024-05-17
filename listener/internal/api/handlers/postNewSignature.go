@@ -77,8 +77,12 @@ func filterAndVerifySignatures(requests []types.SignatureRequestDecoded, validat
 	validSignatures := []types.SignatureRequestDecodedWithStatus{}
 	for _, req := range requests {
 		status, ok := validatorsStatusMap[req.Pubkey]
-		if !ok || status == types.Inactive {
-			logger.Warn("Validator not found or inactive: " + req.Pubkey)
+		if !ok {
+			logger.Warn("Validator not found: " + req.Pubkey)
+			continue
+		}
+		if status == types.Inactive {
+			logger.Warn("Inactive validator: " + req.Pubkey)
 			continue
 		}
 		reqWithStatus := types.SignatureRequestDecodedWithStatus{

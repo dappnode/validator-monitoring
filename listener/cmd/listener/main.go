@@ -69,10 +69,9 @@ func main() {
 		apiCron.RemoveOldSignatures(dbCollection, 720)
 
 	})
-	// c.AddFunc("* * * * *", func() {
-	// 	apiCron.RemoveUnknownSignatures(dbCollection, config.BeaconNodeURLs)
-
-	// })
+	c.AddFunc("* * * * *", func() {
+		apiCron.RemoveUnknownSignatures(dbCollection, config.BeaconNodeURLs)
+	})
 	c.Start()
 
 	// Set up signal handling for graceful shutdown
