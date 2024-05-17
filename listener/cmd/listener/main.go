@@ -67,7 +67,12 @@ func main() {
 	c.AddFunc("@daily", func() {
 		// there are 24 * 30 = 720 hours in 30 days
 		apiCron.RemoveOldSignatures(dbCollection, 720)
+
 	})
+	// c.AddFunc("* * * * *", func() {
+	// 	apiCron.RemoveUnknownSignatures(dbCollection, config.BeaconNodeURLs)
+
+	// })
 	c.Start()
 
 	// Set up signal handling for graceful shutdown

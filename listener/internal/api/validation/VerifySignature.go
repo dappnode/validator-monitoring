@@ -10,7 +10,8 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-func VerifySignature(req types.SignatureRequestDecodedWithActive) (bool, error) {
+// TODO: this function shoul take as arg only the required inputs and not the full request
+func VerifySignature(req types.SignatureRequestDecodedWithStatus) (bool, error) {
 	// Decode the public key from hex, remove the 0x prefix ONLY if exists from req.Pubkey
 	req.Pubkey = strings.TrimPrefix(req.Pubkey, "0x")
 	req.Pubkey = strings.TrimSpace(req.Pubkey)

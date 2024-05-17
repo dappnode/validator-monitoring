@@ -53,7 +53,7 @@ const (
 	Inactive Status = "inactive"
 )
 
-type SignatureRequestDecodedWithActive struct {
+type SignatureRequestDecodedWithStatus struct {
 	SignatureRequestDecoded
 	Status Status `json:"status"` // "unknown" | "active" | "inactive"
 }

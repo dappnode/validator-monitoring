@@ -13,81 +13,96 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Posting a new singature consists in the following steps:
-// 1. Decode and validate
-// 2. Get active validators
-// 3. Validate signature and insert into MongoDB
 func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string) {
 	logger.Debug("Received new POST '/newSignature' request")
-
-	// Parse request body
 	var requests []types.SignatureRequest
-	err := json.NewDecoder(r.Body).Decode(&requests)
-	if err != nil {
+
+	// Parse and validate request body
+	if err := json.NewDecoder(r.Body).Decode(&requests); err != nil {
 		logger.Error("Failed to decode request body: " + err.Error())
 		respondError(w, http.StatusBadRequest, "Invalid request format")
 		return
 	}
-	// Decode and validate incoming requests
-	validRequests, err := validation.ValidateAndDecodeRequests(requests)
-	if err != nil {
-		logger.Error("Failed to decode request body: " + err.Error())
-		respondError(w, http.StatusBadRequest, "Invalid request format")
-		return
-	}
-	// Respond with an error if no valid requests were found
-	if len(validRequests) == 0 {
+
+	requestsValidatedAndDecoded, err := validation.ValidateAndDecodeRequests(requests)
+	if err != nil || len(requestsValidatedAndDecoded) == 0 {
+		logger.Error("Failed to validate and decode requests: " + err.Error())
 		respondError(w, http.StatusBadRequest, "No valid requests")
 		return
 	}
 
-	beaconNodeUrl, ok := beaconNodeUrls[validRequests[0].Network]
+	// Check network validity
+	network := requestsValidatedAndDecoded[0].Network
+	beaconNodeUrl, ok := beaconNodeUrls[network]
 	if !ok {
 		respondError(w, http.StatusBadRequest, "Invalid network")
 		return
 	}
 
-	activeValidators, err := validation.GetActiveValidators(validRequests, beaconNodeUrl)
+	// Get active validators
+	pubkeys := getPubkeys(requestsValidatedAndDecoded)
+	validatorsStatusMap, err := validation.GetValidatorsStatus(pubkeys, beaconNodeUrl)
 	if err != nil {
 		logger.Error("Failed to get active validators: " + err.Error())
-		respondError(w, http.StatusInternalServerError, "Failed to get active validators")
-		return
-	}
-	if len(activeValidators) == 0 {
-		respondError(w, http.StatusInternalServerError, "No active validators found in network")
+		respondError(w, http.StatusInternalServerError, "Failed to get active validators: "+err.Error())
 		return
 	}
 
-	validSignatures := []types.SignatureRequestDecodedWithActive{}
-	for _, req := range activeValidators {
-		isValidSignature, err := validation.VerifySignature(req)
-		if err != nil {
-			logger.Error("Failed to validate signature: " + err.Error())
-			continue
-		}
-		if !isValidSignature {
-			logger.Warn("Invalid signature: " + req.Signature)
-			continue
-		}
-		validSignatures = append(validSignatures, req)
-	}
-	// Respond with an error if no valid signatures were found
+	// Filter and verify signatures
+	validSignatures := filterAndVerifySignatures(requestsValidatedAndDecoded, validatorsStatusMap)
 	if len(validSignatures) == 0 {
 		respondError(w, http.StatusBadRequest, "No valid signatures")
 		return
 	}
 
-	// Iterate over all valid signatures and insert the signature
-	for _, req := range validSignatures {
+	// Insert valid signatures into MongoDB
+	if err := insertSignaturesIntoDB(validSignatures, dbCollection); err != nil {
+		logger.Error("Failed to insert signatures into MongoDB: " + err.Error())
+		respondError(w, http.StatusInternalServerError, "Failed to insert signatures into MongoDB")
+		return
+	}
+
+	respondOK(w, "Finished processing signatures")
+}
+
+func getPubkeys(requests []types.SignatureRequestDecoded) []string {
+	pubkeys := make([]string, len(requests))
+	for i, req := range requests {
+		pubkeys[i] = req.Pubkey
+	}
+	return pubkeys
+}
+
+func filterAndVerifySignatures(requests []types.SignatureRequestDecoded, validatorsStatusMap map[string]types.Status) []types.SignatureRequestDecodedWithStatus {
+	validSignatures := []types.SignatureRequestDecodedWithStatus{}
+	for _, req := range requests {
+		status, ok := validatorsStatusMap[req.Pubkey]
+		if !ok || status == types.Inactive {
+			logger.Warn("Validator not found or inactive: " + req.Pubkey)
+			continue
+		}
+		reqWithStatus := types.SignatureRequestDecodedWithStatus{
+			SignatureRequestDecoded: req,
+			Status:                  status,
+		}
+		if isValid, err := validation.VerifySignature(reqWithStatus); err == nil && isValid {
+			validSignatures = append(validSignatures, reqWithStatus)
+		} else {
+			logger.Warn("Invalid signature: " + req.Signature)
+		}
+	}
+	return validSignatures
+}
+
+func insertSignaturesIntoDB(signatures []types.SignatureRequestDecodedWithStatus, dbCollection *mongo.Collection) error {
+	for _, req := range signatures {
 		filter := bson.M{
 			"pubkey":  req.Pubkey,
 			"tag":     req.Tag,
 			"network": req.Network,
 		}
 		update := bson.M{
-			"$set": bson.M{
-				"status": req.Status, // Only save the last status
-			},
+			"$set": bson.M{"status": req.Status},
 			"$push": bson.M{
 				"entries": bson.M{
 					"payload":   req.Payload,
@@ -95,19 +110,16 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 					"decodedPayload": bson.M{
 						"type":      req.DecodedPayload.Type,
 						"platform":  req.DecodedPayload.Platform,
-						"timestamp": req.DecodedPayload.Timestamp, // Needed to filter out old signatures
+						"timestamp": req.DecodedPayload.Timestamp,
 					},
 				},
 			},
 		}
 		options := options.Update().SetUpsert(true)
-		_, err := dbCollection.UpdateOne(context.TODO(), filter, update, options)
-		if err != nil {
-			logger.Error("Failed to insert signature into MongoDB: " + err.Error())
-			continue
+		if _, err := dbCollection.UpdateOne(context.Background(), filter, update, options); err != nil {
+			return err
 		}
 		logger.Debug("New Signature " + req.Signature + " inserted into MongoDB")
 	}
-
-	respondOK(w, "Finished processing signatures")
+	return nil
 }
