@@ -39,42 +39,36 @@ func TestValidateAndDecodeRequests(t *testing.T) {
 			Payload:   validEncodedPayload,
 			Pubkey:    validBlsPubkey,
 			Signature: "0x" + repeatString("a", 192), // valid signature
-			Network:   "mainnet",
 			Tag:       "tag1",
 		},
 		{ // Missing fields
 			Payload:   "",
 			Pubkey:    "",
 			Signature: "",
-			Network:   "",
 			Tag:       "",
 		},
 		{ // Invalid signature format
 			Payload:   validEncodedPayload,
 			Pubkey:    validBlsPubkey,
 			Signature: "bad_signature",
-			Network:   "mainnet",
 			Tag:       "tag2",
 		},
 		{ // Old timestamp
 			Payload:   oldEncodedPayload,
 			Pubkey:    validBlsPubkey,
 			Signature: "0x" + repeatString("a", 192),
-			Network:   "mainnet",
 			Tag:       "tag3",
 		},
 		{ // Invalid type
 			Payload:   invalidTypePayload,
 			Pubkey:    validBlsPubkey,
 			Signature: "0x" + repeatString("a", 192),
-			Network:   "mainnet",
 			Tag:       "tag4",
 		},
 		{ // Invalid BLS public key
 			Payload:   validEncodedPayload,
 			Pubkey:    invalidBlsPubkey,
 			Signature: "0x" + repeatString("a", 192),
-			Network:   "mainnet",
 			Tag:       "tag5",
 		},
 	}
