@@ -31,7 +31,6 @@ func ValidateAndDecodeRequests(requests []types.SignatureRequest) ([]types.Signa
 				Payload:   req.Payload,
 				Pubkey:    req.Pubkey,
 				Signature: req.Signature,
-				Network:   req.Network,
 				Tag:       req.Tag,
 			},
 		})
@@ -43,7 +42,7 @@ func ValidateAndDecodeRequests(requests []types.SignatureRequest) ([]types.Signa
 // TODO: validate network and tag against enums
 func isValidCodedRequest(req *types.SignatureRequest) bool {
 	// Check for any empty required fields
-	if req.Network == "" || req.Tag == "" || req.Signature == "" || req.Payload == "" || req.Pubkey == "" {
+	if req.Tag == "" || req.Signature == "" || req.Payload == "" || req.Pubkey == "" {
 		logger.Debug("Received Invalid Request: One or more required fields are empty.")
 		return false
 	}

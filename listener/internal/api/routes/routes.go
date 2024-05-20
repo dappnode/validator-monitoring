@@ -15,8 +15,8 @@ func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[types.Networ
 	// Define routes
 	r.HandleFunc("/", handlers.GetHealthCheck).Methods(http.MethodGet)
 	// closure function to inject dbCollection into the handler
-	r.HandleFunc("/newSignature", func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostNewSignature(w, r, dbCollection, beaconNodeUrls)
+	r.HandleFunc("/signatures", func(w http.ResponseWriter, r *http.Request) {
+		handlers.PostSignatures(w, r, dbCollection, beaconNodeUrls)
 	}).Methods(http.MethodPost)
 
 	// Middlewares

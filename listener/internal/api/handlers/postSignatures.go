@@ -8,14 +8,29 @@ import (
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 	"github.com/dappnode/validator-monitoring/listener/internal/api/validation"
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
+	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string) {
-	logger.Debug("Received new POST '/newSignature' request")
+func PostSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string) {
+	logger.Debug("Received new POST '/signatures' request")
 	var requests []types.SignatureRequest
+
+	// Get network from URL
+	vars := mux.Vars(r)
+	networkVar, ok := vars["network"]
+	if !ok {
+		respondError(w, http.StatusBadRequest, "Invalid URL, missing network")
+		return
+	}
+	network := types.Network(networkVar)
+	beaconNodeUrl, ok := beaconNodeUrls[network]
+	if !ok {
+		respondError(w, http.StatusBadRequest, "Invalid network")
+		return
+	}
 
 	// Parse and validate request body
 	if err := json.NewDecoder(r.Body).Decode(&requests); err != nil {
@@ -28,14 +43,6 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 	if err != nil || len(requestsValidatedAndDecoded) == 0 {
 		logger.Error("Failed to validate and decode requests: " + err.Error())
 		respondError(w, http.StatusBadRequest, "No valid requests")
-		return
-	}
-
-	// Check network validity
-	network := requestsValidatedAndDecoded[0].Network
-	beaconNodeUrl, ok := beaconNodeUrls[network]
-	if !ok {
-		respondError(w, http.StatusBadRequest, "Invalid network")
 		return
 	}
 
@@ -56,7 +63,7 @@ func PostNewSignature(w http.ResponseWriter, r *http.Request, dbCollection *mong
 	}
 
 	// Insert valid signatures into MongoDB
-	if err := insertSignaturesIntoDB(validSignatures, dbCollection); err != nil {
+	if err := insertSignaturesIntoDB(validSignatures, network, dbCollection); err != nil {
 		logger.Error("Failed to insert signatures into MongoDB: " + err.Error())
 		respondError(w, http.StatusInternalServerError, "Failed to insert signatures into MongoDB")
 		return
@@ -98,12 +105,12 @@ func filterAndVerifySignatures(requests []types.SignatureRequestDecoded, validat
 	return validSignatures
 }
 
-func insertSignaturesIntoDB(signatures []types.SignatureRequestDecodedWithStatus, dbCollection *mongo.Collection) error {
+func insertSignaturesIntoDB(signatures []types.SignatureRequestDecodedWithStatus, network types.Network, dbCollection *mongo.Collection) error {
 	for _, req := range signatures {
 		filter := bson.M{
 			"pubkey":  req.Pubkey,
 			"tag":     req.Tag,
-			"network": req.Network,
+			"network": network,
 		}
 		update := bson.M{
 			"$setOnInsert": bson.M{"status": req.Status}, // do not update status if already exists
