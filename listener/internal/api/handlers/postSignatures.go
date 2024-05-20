@@ -8,7 +8,6 @@ import (
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 	"github.com/dappnode/validator-monitoring/listener/internal/api/validation"
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
-	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -18,11 +17,9 @@ func PostSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.
 	logger.Debug("Received new POST '/signatures' request")
 	var requests []types.SignatureRequest
 
-	// Get network from URL
-	vars := mux.Vars(r)
-	networkVar, ok := vars["network"]
-	if !ok {
-		respondError(w, http.StatusBadRequest, "Invalid URL, missing network")
+	networkVar := r.URL.Query().Get("network")
+	if networkVar == "" {
+		respondError(w, http.StatusBadRequest, "Missing network query parameter")
 		return
 	}
 	network := types.Network(networkVar)
