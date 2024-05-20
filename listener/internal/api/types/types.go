@@ -29,7 +29,7 @@ type SignatureRequest struct {
 	Payload   string `json:"payload"`
 	Pubkey    string `json:"pubkey"`
 	Signature string `json:"signature"`
-	Tag       string `json:"tag"`
+	Tag       Tag    `json:"tag"`
 }
 
 type DecodedPayload struct {
