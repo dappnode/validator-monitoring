@@ -110,8 +110,9 @@ func insertSignaturesIntoDB(signatures []types.SignatureRequestDecodedWithStatus
 			"tag":     req.Tag,
 			"network": network,
 		}
+
+		// Create a base update document with $push operation
 		update := bson.M{
-			"$setOnInsert": bson.M{"status": req.Status}, // do not update status if already exists
 			"$push": bson.M{
 				"entries": bson.M{
 					"payload":   req.Payload,
@@ -124,10 +125,19 @@ func insertSignaturesIntoDB(signatures []types.SignatureRequestDecodedWithStatus
 				},
 			},
 		}
+
+		// Only update status unknown -> active
+		if req.Status == "active" {
+			update["$set"] = bson.M{"status": req.Status}
+		} else {
+			update["$setOnInsert"] = bson.M{"status": req.Status}
+		}
+
 		options := options.Update().SetUpsert(true)
 		if _, err := dbCollection.UpdateOne(context.Background(), filter, update, options); err != nil {
 			return err
 		}
+
 		logger.Debug("New Signature " + req.Signature + " inserted into MongoDB")
 	}
 	return nil
