@@ -69,7 +69,7 @@ func main() {
 		apiCron.RemoveOldSignatures(dbCollection, 720)
 
 	})
-	c.AddFunc("* * * * *", func() {
+	c.AddFunc("@every 2m", func() {
 		apiCron.UpdateSignaturesStatus(dbCollection, config.BeaconNodeURLs)
 	})
 	c.Start()
