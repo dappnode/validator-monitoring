@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/handlers"
+	"github.com/dappnode/validator-monitoring/listener/internal/api/middleware"
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,8 +20,11 @@ func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[types.Networ
 		handlers.PostSignatures(w, r, dbCollection, beaconNodeUrls, maxEntriesPerBson)
 	}).Methods(http.MethodPost)
 
-	// Middlewares
-	// r.Use(corsmiddleware()))
+	//TODO: implement handler for GET signatures
+	r.Handle("/signatures", middleware.JWTMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Assuming you have a handler for GET signatures
+		handlers.PostSignatures(w, r, dbCollection, beaconNodeUrls)
+	}))).Methods(http.MethodGet)
 
 	return r
 }

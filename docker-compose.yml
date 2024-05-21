@@ -18,7 +18,8 @@ services:
       - mongo
     container_name: listener
     restart: always
-
+    volumes:
+      - ./jwt:/app/jwt  
   ui:
     build:
       context: ui
