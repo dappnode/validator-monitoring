@@ -21,7 +21,7 @@ import (
 func main() {
 	logger.Info("Starting listener")
 	// Load config
-	config, err := config.LoadConfig()
+	config, err := config.GetConfig()
 	if err != nil {
 		logger.Fatal("Failed to load config: " + err.Error())
 	}
@@ -51,6 +51,7 @@ func main() {
 		dbClient,
 		dbCollection,
 		config.BeaconNodeURLs,
+		config.MaxEntriesPerBson,
 	)
 
 	// Start the API server in a goroutine. Needs to be in a goroutine to allow for the cron job to run,
