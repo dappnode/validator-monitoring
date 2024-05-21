@@ -13,6 +13,7 @@ services:
       BEACON_NODE_URL_HOLESKY: ${BEACON_NODE_URL_HOLESKY}
       BEACON_NODE_URL_LUKSO: ${BEACON_NODE_URL_LUKSO}
       BEACON_NODE_URL_GNOSIS: ${BEACON_NODE_URL_GNOSIS}
+      MONGO_DB_BSON_MAX_ENTRIES: ${MONGO_DB_BSON_MAX_ENTRIES}
     depends_on:
       - mongo
     container_name: listener
