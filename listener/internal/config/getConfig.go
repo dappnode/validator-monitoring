@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
 	"github.com/dappnode/validator-monitoring/listener/internal/logger"
@@ -18,9 +19,11 @@ type Config struct {
 	LogLevel string
 	// BeaconNodeURLs is the URLs of the beacon nodes for different networks
 	BeaconNodeURLs map[types.Network]string
+	// Max number of entries allowed per BSON document
+	MaxEntriesPerBson int
 }
 
-func LoadConfig() (*Config, error) {
+func GetConfig() (*Config, error) {
 	logLevel := os.Getenv("LOG_LEVEL")
 	if logLevel == "" {
 		logger.Info("LOG_LEVEL is not set, using default INFO")
@@ -55,9 +58,25 @@ func LoadConfig() (*Config, error) {
 	if beaconLukso == "" {
 		return nil, fmt.Errorf("BEACON_NODE_URL_LUKSO is not set")
 	}
+	maxEntriesPerBsonStr := os.Getenv("MAX_ENTRIES_PER_BSON")
+	if maxEntriesPerBsonStr == "" {
+		logger.Info("MAX_ENTRIES_PER_BSON is not set, using default 30")
+		maxEntriesPerBsonStr = "30"
+	}
+	MaxEntriesPerBson, err := strconv.Atoi(maxEntriesPerBsonStr)
+	if err != nil {
+		return nil, fmt.Errorf("MAX_ENTRIES_PER_BSON is not a valid integer")
+	}
 
-	// print all envs in a single line
-	logger.Info("Loaded config: LOG_LEVEL=" + logLevel + " API_PORT=" + apiPort + " MONGO_DB_URI=" + mongoDBURI + " BEACON_NODE_URL_MAINNET=" + beaconMainnet + " BEACON_NODE_URL_HOLESKY=" + beaconHolesky + " BEACON_NODE_URL_GNOSIS=" + beaconGnosis + " BEACON_NODE_URL_LUKSO=" + beaconLukso)
+	// print all envs beauty with newlines
+	logger.Info("LOG_LEVEL: " + logLevel)
+	logger.Info("API_PORT: " + apiPort)
+	logger.Info("MONGO_DB_URI: " + mongoDBURI)
+	logger.Info("BEACON_NODE_URL_MAINNET: " + beaconMainnet)
+	logger.Info("BEACON_NODE_URL_HOLESKY: " + beaconHolesky)
+	logger.Info("BEACON_NODE_URL_GNOSIS: " + beaconGnosis)
+	logger.Info("BEACON_NODE_URL_LUKSO: " + beaconLukso)
+	logger.Info("MAX_ENTRIES_PER_BSON: " + maxEntriesPerBsonStr)
 
 	beaconNodeURLs := map[types.Network]string{
 		types.Mainnet: beaconMainnet,
@@ -67,9 +86,10 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Port:           apiPort,
-		MongoDBURI:     mongoDBURI,
-		LogLevel:       logLevel,
-		BeaconNodeURLs: beaconNodeURLs,
+		Port:              apiPort,
+		MongoDBURI:        mongoDBURI,
+		LogLevel:          logLevel,
+		BeaconNodeURLs:    beaconNodeURLs,
+		MaxEntriesPerBson: MaxEntriesPerBson,
 	}, nil
 }

@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/types"
@@ -13,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func PostSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string) {
+func PostSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string, maxEntriesPerBson int) {
 	logger.Debug("Received new POST '/signatures' request")
 	var requests []types.SignatureRequest
 
@@ -61,9 +63,9 @@ func PostSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.
 	}
 
 	// Insert valid signatures into MongoDB
-	if err := insertSignaturesIntoDB(validSignatures, network, dbCollection); err != nil {
+	if err := insertSignaturesIntoDB(validSignatures, network, dbCollection, maxEntriesPerBson); err != nil {
 		logger.Error("Failed to insert signatures into MongoDB: " + err.Error())
-		respondError(w, http.StatusInternalServerError, "Failed to insert signatures into MongoDB")
+		respondError(w, http.StatusInternalServerError, "Failed to insert signatures into MongoDB: "+err.Error())
 		return
 	}
 
@@ -103,12 +105,27 @@ func filterAndVerifySignatures(requests []types.SignatureRequestDecoded, validat
 	return validSignatures
 }
 
-func insertSignaturesIntoDB(signatures []types.SignatureRequestDecodedWithStatus, network types.Network, dbCollection *mongo.Collection) error {
+func insertSignaturesIntoDB(signatures []types.SignatureRequestDecodedWithStatus, network types.Network, dbCollection *mongo.Collection, maxEntriesPerBson int) error {
 	for _, req := range signatures {
 		filter := bson.M{
 			"pubkey":  req.Pubkey,
 			"tag":     req.Tag,
 			"network": network,
+		}
+
+		// Check the number of entries
+		var result struct {
+			Entries []bson.M `bson:"entries"`
+		}
+		err := dbCollection.FindOne(context.Background(), filter).Decode(&result)
+		if err != nil && err != mongo.ErrNoDocuments {
+			return err
+		}
+
+		// mongo DB has a limit of 16MB per document
+		// if this limit is reached the following exception is thrown: `write exception: write errors: [Resulting document after update is larger than 16777216]`
+		if len(result.Entries) >= maxEntriesPerBson {
+			return errors.New("Max number of entries reached for pubkey " + req.Pubkey + ". Max entries per pubkey: " + fmt.Sprint(maxEntriesPerBson))
 		}
 
 		// Create a base update document with $push operation

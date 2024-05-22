@@ -83,9 +83,14 @@ services:
           - postgres.web3signer.dappnode
 
   brain:
-    build:
-      context: web3signer/brain
-      dockerfile: Dockerfile
+    image: staking-brain:0.1.18
+    environment:
+      NETWORK: holesky
+      _DAPPNODE_GLOBAL_EXECUTION_CLIENT_HOLESKY: "holesky-geth.dnp.dappnode.eth"
+      _DAPPNODE_GLOBAL_CONSENSUS_CLIENT_HOLESKY: "lighthouse-holesky.dnp.dappnode.eth"
+      SHARE_DATA_WITH_DAPPNODE: "true"
+      VALIDATORS_MONITOR_URL: "http://listener.dappnode:8080"
+      SHARE_CRON_INTERVAL: "3600"
     restart: always
     volumes:
       - "brain_data:/app/data"
