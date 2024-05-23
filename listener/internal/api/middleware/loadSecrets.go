@@ -2,112 +2,82 @@ package middleware
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var allowedPublicKeys []string
-
-// Runs automatically in main.go when the package is imported
-func init() {
-	// Load public keys from a JSON file
-	data, err := os.ReadFile("/app/jwt/public_keys.json")
-	if err != nil {
-		logger.Fatal("Failed to load public keys: " + err.Error())
-	}
-
-	var keys struct {
-		AllowedPublicKeys []string `json:"allowedPublicKeys"`
-	}
-
-	err = json.Unmarshal(data, &keys)
-	if err != nil {
-		logger.Fatal("Failed to unmarshal public keys: " + err.Error())
-	}
-
-	allowedPublicKeys = keys.AllowedPublicKeys
-	logger.Info("Loaded public keys: " + fmt.Sprintln(allowedPublicKeys))
+type PublicKeyEntry struct {
+	PublicKey string   `json:"publicKey"`
+	Roles     []string `json:"roles"`
 }
 
-// CustomClaims defines the custom claims in the JWT token
-type MyCustomClaims struct {
-	PubKey string `json:"pubkey"`
-	jwt.RegisteredClaims
-}
-
-// JWTMiddleware is a middleware that checks the Authorization header for a valid JWT token
-// and verifies the signature using the public key of the user contained in the token.
-// The public keys are loaded from a JSON file.
-// The JWT token must be in the format "Bearer <token string>"
+// JWTMiddleware dynamically checks tokens against public keys loaded from a JSON file
 func JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
+			http.Error(w, "Authorization header is required", http.StatusUnauthorized)
 			return
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		if tokenString == authHeader {
-			http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			http.Error(w, "Authorization header format must be Bearer {token}", http.StatusUnauthorized)
 			return
 		}
 
-		// Parse the token
-		token, err := jwt.ParseWithClaims(tokenString, &MyCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
-			// Validate the algorithm
-			if _, ok := token.Method.(*jwt.SigningMethodECDSA); !ok {
-				return nil, errors.New("unexpected signing method")
+		tokenString := parts[1]
+
+		// Load public keys from JSON file
+		publicKeys, err := loadPublicKeys("/app/jwt/users.json")
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to load public keys: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Parse and verify the token
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 
-			// Extract the claims
-			claims, ok := token.Claims.(*MyCustomClaims)
-			logger.Info("token:" + fmt.Sprintln(token))
+			kid, ok := token.Header["kid"].(string)
 			if !ok {
-				return nil, errors.New("invalid token claims")
+				return nil, fmt.Errorf("kid not found in token header")
 			}
 
-			// Verify the expiration time
-			if claims.ExpiresAt != nil && !claims.ExpiresAt.Time.After(time.Now()) {
-				return nil, errors.New("token has expired, it expires at " + claims.ExpiresAt.Time.String() + " now is " + time.Now().String())
+			// Load the public key for the given kid
+			entry, exists := publicKeys[kid]
+			if !exists {
+				return nil, fmt.Errorf("public key not found for kid: %s", kid)
 			}
 
-			// Verify that the public key is allowed
-			isAllowed := false
-			for _, allowedKey := range allowedPublicKeys {
-				logger.Info("allowedKey:" + allowedKey)
-				logger.Info("claims.PubKey:" + claims.PubKey)
-				if allowedKey == claims.PubKey {
-					isAllowed = true
-					break
-				}
-			}
-
-			if !isAllowed {
-				return nil, errors.New("public key not allowed")
-			}
-
-			// Parse and return the public key
-			pubKey, err := jwt.ParseECPublicKeyFromPEM([]byte(claims.PubKey))
-			if err != nil {
-				return nil, err
-			}
-			logger.Info("pubKey:" + fmt.Sprintln(pubKey))
-			return pubKey, nil
+			return jwt.ParseRSAPublicKeyFromPEM([]byte(entry.PublicKey))
 		})
 
 		if err != nil || !token.Valid {
-			http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+			http.Error(w, fmt.Sprintf("Invalid token or claims: %v", err), http.StatusUnauthorized)
 			return
 		}
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func loadPublicKeys(filePath string) (map[string]PublicKeyEntry, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var keys map[string]PublicKeyEntry
+	if err := json.Unmarshal(data, &keys); err != nil {
+		return nil, err
+	}
+
+	return keys, nil
 }
