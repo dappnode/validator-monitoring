@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,6 +15,10 @@ type PublicKeyEntry struct {
 	PublicKey string   `json:"publicKey"`
 	Roles     []string `json:"roles"`
 }
+
+type contextKey string
+
+const RolesKey contextKey = "roles"
 
 // JWTMiddleware dynamically checks tokens against public keys loaded from a JSON file
 func JWTMiddleware(next http.Handler) http.Handler {
@@ -56,6 +61,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 				return nil, fmt.Errorf("public key not found for kid: %s", kid)
 			}
 
+			// Return the public key for signature verification
 			return jwt.ParseRSAPublicKeyFromPEM([]byte(entry.PublicKey))
 		})
 
@@ -64,7 +70,22 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		// Extract the kid and find the associated roles
+		kid, ok := token.Header["kid"].(string)
+		if !ok {
+			http.Error(w, "kid not found in token header", http.StatusUnauthorized)
+			return
+		}
+
+		entry, exists := publicKeys[kid]
+		if !exists {
+			http.Error(w, "public key not found for kid", http.StatusUnauthorized)
+			return
+		}
+
+		// Store roles in context
+		ctx := context.WithValue(r.Context(), RolesKey, entry.Roles)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

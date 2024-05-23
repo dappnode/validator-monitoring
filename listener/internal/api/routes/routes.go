@@ -20,10 +20,9 @@ func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[types.Networ
 		handlers.PostSignatures(w, r, dbCollection, beaconNodeUrls, maxEntriesPerBson)
 	}).Methods(http.MethodPost)
 
-	//TODO: implement handler for GET signatures
+	// this method uses JWTmiddleware as auth
 	r.Handle("/signatures", middleware.JWTMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Assuming you have a handler for GET signatures
-		handlers.PostSignatures(w, r, dbCollection, beaconNodeUrls, maxEntriesPerBson)
+		handlers.GetSignatures(w, r, dbCollection)
 	}))).Methods(http.MethodGet)
 
 	return r
