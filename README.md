@@ -4,9 +4,11 @@
 
 This repository contains the code for the validator monitoring system. The system is designed to listen signatures request from different networks validate them and store the results in a database.
 
+It also contains a simple JWT generator that can be used to easily generate the JWT token necessary to access some API endpoints. More on this on the [API](#api) section.
+
 In dappnode, the signature request and validation flow is as follows:
 
-1. The staking brain sends the signature request of type `PROOF_OF_VALIDATION` to the web3signer (see https://github.com/Consensys/web3signer/pull/982). The request has the following format:
+**1.** The staking brain sends the signature request of type `PROOF_OF_VALIDATION` to the web3signer (see <https://github.com/Consensys/web3signer/pull/982>). The request has the following format:
 
 ```json
 {
@@ -16,17 +18,54 @@ In dappnode, the signature request and validation flow is as follows:
 }
 ```
 
-2. The web3signer answers with the `PROOF_OF_VALIDATION` signature. Its important to notice that the order of the items in the JSON matters.
+**2.** The web3signer answers with the `PROOF_OF_VALIDATION` signature. Its important to notice that the order of the items in the JSON matters.
 
-3. The staking brain sends back all the `PROOF_OF_VALIDATION` signatures to the the signatures monitoring system. The listener will validate the requests, the validators and the signatures and finally store the result into a mongo db.
+**3.** The staking brain sends back all the `PROOF_OF_VALIDATION` signatures to the the signatures monitoring system. The listener will validate the requests, the validators and the signatures and finally store the result into a mongo db.
 
-## API
+##  API
 
 - `/signatures?network=<network>`:
   - `POST`: TODO
   - `GET`: TODO
 
-## Validation
+### Authentication
+
+The `GET /signatures` endpoint is protected by a JWT token, which must be included in the HTTPS request. This token should be passed in the Authorization header using the Bearer schema. The expected format is:
+
+```text
+Bearer <JWT token>
+```
+
+#### JWT requirements
+
+To access the `GET /signatures` endpoint, the JWT must meet the following criteria:
+
+- **Key ID** (`kid`): The JWT must include a kid claim in the header. It will be used to identify which public key to use to verify the signature.
+
+As a nice to have, the JWT can also include the following claims as part of the payload:
+
+- **Expiration time** (`exp`): The expiration time of the token, in Unix time. If no `exp` is provided, the token will be valid indefinitely.
+- **Subject** (`sub`): Additional information about the user or entity behind the token. (e.g. an email address)
+
+#### Generating the JWT
+
+To generate a JWT token, you can use the `jwt-generator` tool included in this repository. The tool requires an RSA private key in PEM format to sign the token.
+A keypair in PEM format can be generated using OpenSSL:
+
+```sh
+    openssl genrsa -out private.pem 2048
+    openssl rsa -in private.pem -pubout -out public.pem
+```
+
+Once you have the private key, you can generate a JWT token using the `jwt-generator` tool:
+
+```sh
+    ./jwt-generator --private-key=path/to/private.pem --kid=your_kid_here --exp=24h --output=path/to/output.jwt
+```
+
+Only JWT tokens with whitelisted "kid" and pubkey will be accepted. Please contact the dappnode team for more information on this.
+
+##  Validation
 
 The process of validating the request and the signature follows the next steps:
 
@@ -35,10 +74,10 @@ The process of validating the request and the signature follows the next steps:
 
 ```go
 type SignatureRequest struct {
-	Payload   string `json:"payload"`
-	Pubkey    string `json:"pubkey"`
-	Signature string `json:"signature"`
-	Tag       Tag    `json:"tag"`
+ Payload   string `json:"payload"`
+ Pubkey    string `json:"pubkey"`
+ Signature string `json:"signature"`
+ Tag       Tag    `json:"tag"`
 }
 ```
 
@@ -46,19 +85,19 @@ The payload must be encoded in base64 and must have the following format:
 
 ```go
 type DecodedPayload struct {
-	Type      string `json:"type"`
-	Platform  string `json:"platform"`
-	Timestamp string `json:"timestamp"`
+ Type      string `json:"type"`
+ Platform  string `json:"platform"`
+ Timestamp string `json:"timestamp"`
 }
 ```
 
-3. The validators must be in status "active_on_going" according to a standard beacon node API, see https://ethereum.github.io/beacon-APIs/#/Beacon/postStateValidators:
+3. The validators must be in status "active_on_going" according to a standard beacon node API, see <https://ethereum.github.io/beacon-APIs/#/Beacon/postStateValidators>:
    3.1 The signatures from the validators that are not in this status will be discarded.
    3.2 If in the moment of querying the beacon node to get the validator status the beacon node is down the signature will be accepted storing the validator status as "unknown" for later validation.
 4. Only the signatures that have passed the previous steps will be validated. The validation of the signature will be done using the pubkey from the request.
 5. Only valid signatures will be stored in the database.
 
-## Crons
+##  Crons
 
 There are 2 cron to ensure the system is working properly:
 
@@ -88,12 +127,12 @@ bson.M{
                 "timestamp": req.DecodedPayload.Timestamp,
             },
         },
-	}
+ }
 ```
 
 **Mongo db UI**
 
-There is a express mongo db UI that can be accessed at `http://localhost:8080`. If its running in dev mode and the compose dev was deployed on a dappnode environment then it can be access through http://ui.dappnode:8080
+There is a express mongo db UI that can be accessed at `http://localhost:8080`. If its running in dev mode and the compose dev was deployed on a dappnode environment then it can be access through <http://ui.dappnode:8080>
 
 ## Environment variables
 

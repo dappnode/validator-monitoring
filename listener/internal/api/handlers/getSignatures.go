@@ -12,17 +12,19 @@ import (
 )
 
 func GetSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection) {
-	// Get roles from the context
-	roles, ok := r.Context().Value(middleware.RolesKey).([]string)
-	if !ok || len(roles) == 0 {
-		http.Error(w, "Roles not found in context", http.StatusUnauthorized)
+	// Get tags from the context
+	tags, ok := r.Context().Value(middleware.TagsKey).([]string)
+	// middlewware already checks that tags is not empty. If something fails here, it is
+	// because middleware didnt pass context correctly
+	if !ok || len(tags) == 0 {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// Query MongoDB for documents with tags matching the roles
+	// Query MongoDB for documents with tags matching the context tags
 	var results []bson.M
 	filter := bson.M{
-		"tag": bson.M{"$in": roles},
+		"tag": bson.M{"$in": tags},
 	}
 	cursor, err := dbCollection.Find(context.Background(), filter)
 	if err != nil {

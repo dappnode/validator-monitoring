@@ -11,14 +11,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type PublicKeyEntry struct {
+type KeyId struct {
 	PublicKey string   `json:"publicKey"`
-	Roles     []string `json:"roles"`
+	Tags      []string `json:"tags"`
 }
 
 type contextKey string
 
-const RolesKey contextKey = "roles"
+const TagsKey contextKey = "tags"
 
 // JWTMiddleware dynamically checks tokens against public keys loaded from a JSON file
 func JWTMiddleware(next http.Handler) http.Handler {
@@ -37,10 +37,10 @@ func JWTMiddleware(next http.Handler) http.Handler {
 
 		tokenString := parts[1]
 
-		// Load public keys from JSON file
-		publicKeys, err := loadPublicKeys("/app/jwt/users.json")
+		// Load all key ids from the whitelist JSON data file
+		keyIds, err := loadKeyIds("/app/jwt/users.json")
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to load public keys: %v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Internal server error: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -52,11 +52,11 @@ func JWTMiddleware(next http.Handler) http.Handler {
 
 			kid, ok := token.Header["kid"].(string)
 			if !ok {
-				return nil, fmt.Errorf("kid not found in token header")
+				return nil, fmt.Errorf("kid not found in token header, generate a new token with a 'kid'")
 			}
 
 			// Load the public key for the given kid
-			entry, exists := publicKeys[kid]
+			entry, exists := keyIds[kid]
 			if !exists {
 				return nil, fmt.Errorf("public key not found for kid: %s", kid)
 			}
@@ -70,32 +70,39 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Extract the kid and find the associated roles
+		// Extract the kid and find the associated tags. We have to do this again because the token is parsed in a separate function.
 		kid, ok := token.Header["kid"].(string)
 		if !ok {
 			http.Error(w, "kid not found in token header", http.StatusUnauthorized)
 			return
 		}
 
-		entry, exists := publicKeys[kid]
+		entry, exists := keyIds[kid]
 		if !exists {
 			http.Error(w, "public key not found for kid", http.StatusUnauthorized)
 			return
 		}
 
-		// Store roles in context
-		ctx := context.WithValue(r.Context(), RolesKey, entry.Roles)
+		// If the key id is found, but no tags are associated with it, it means the key is not authorized to access
+		// any signature. This should never happen.
+		if len(entry.Tags) == 0 {
+			http.Error(w, "no authorized tags found for given kid", http.StatusUnauthorized)
+			return
+		}
+
+		// Store tags in context. We will use this in the handler to query MongoDB
+		ctx := context.WithValue(r.Context(), TagsKey, entry.Tags)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func loadPublicKeys(filePath string) (map[string]PublicKeyEntry, error) {
+func loadKeyIds(filePath string) (map[string]KeyId, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	var keys map[string]PublicKeyEntry
+	var keys map[string]KeyId
 	if err := json.Unmarshal(data, &keys); err != nil {
 		return nil, err
 	}
