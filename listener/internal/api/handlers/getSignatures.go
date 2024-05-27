@@ -7,11 +7,13 @@ import (
 	"net/http"
 
 	"github.com/dappnode/validator-monitoring/listener/internal/api/middleware"
+	"github.com/dappnode/validator-monitoring/listener/internal/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func GetSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.Collection) {
+	logger.Debug("Received new GET '/signatures' request")
 	// Get tags from the context
 	tags, ok := r.Context().Value(middleware.TagsKey).([]string)
 	// middlewware already checks that tags is not empty. If something fails here, it is

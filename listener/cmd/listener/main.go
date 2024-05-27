@@ -52,6 +52,7 @@ func main() {
 		dbCollection,
 		config.BeaconNodeURLs,
 		config.MaxEntriesPerBson,
+		config.JWTUsersFilePath,
 	)
 
 	// Start the API server in a goroutine. Needs to be in a goroutine to allow for the cron job to run,

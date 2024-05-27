@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string, maxEntriesPerBson int) *mux.Router {
+func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string, maxEntriesPerBson int, jwtUsersFilePath string) *mux.Router {
 	r := mux.NewRouter()
 
 	// Define routes
@@ -23,7 +23,7 @@ func SetupRouter(dbCollection *mongo.Collection, beaconNodeUrls map[types.Networ
 	// this method uses JWTmiddleware as auth
 	r.Handle("/signatures", middleware.JWTMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handlers.GetSignatures(w, r, dbCollection)
-	}))).Methods(http.MethodGet)
+	}), jwtUsersFilePath)).Methods(http.MethodGet)
 
 	return r
 }

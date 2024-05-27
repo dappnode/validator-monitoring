@@ -21,7 +21,7 @@ type contextKey string
 const TagsKey contextKey = "tags"
 
 // JWTMiddleware dynamically checks tokens against public keys loaded from a JSON file
-func JWTMiddleware(next http.Handler) http.Handler {
+func JWTMiddleware(next http.Handler, jwtUsersFilePath string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -38,7 +38,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 		tokenString := parts[1]
 
 		// Load all key ids from the whitelist JSON data file
-		keyIds, err := loadKeyIds("/app/jwt/users.json")
+		keyIds, err := loadKeyIds(jwtUsersFilePath)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Internal server error: %v", err), http.StatusInternalServerError)
 			return

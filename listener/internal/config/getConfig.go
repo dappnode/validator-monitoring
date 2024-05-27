@@ -21,6 +21,7 @@ type Config struct {
 	BeaconNodeURLs map[types.Network]string
 	// Max number of entries allowed per BSON document
 	MaxEntriesPerBson int
+	JWTUsersFilePath  string
 }
 
 func GetConfig() (*Config, error) {
@@ -68,7 +69,11 @@ func GetConfig() (*Config, error) {
 		return nil, fmt.Errorf("MAX_ENTRIES_PER_BSON is not a valid integer")
 	}
 
-	// print all envs beauty with newlines
+	jwtUsersFilePath := os.Getenv("JWT_USERS_FILE_PATH")
+	if jwtUsersFilePath == "" {
+		return nil, fmt.Errorf("JWT_USERS_FILE_PATH is not set")
+	}
+
 	logger.Info("LOG_LEVEL: " + logLevel)
 	logger.Info("API_PORT: " + apiPort)
 	logger.Info("MONGO_DB_URI: " + mongoDBURI)
@@ -77,6 +82,7 @@ func GetConfig() (*Config, error) {
 	logger.Info("BEACON_NODE_URL_GNOSIS: " + beaconGnosis)
 	logger.Info("BEACON_NODE_URL_LUKSO: " + beaconLukso)
 	logger.Info("MAX_ENTRIES_PER_BSON: " + maxEntriesPerBsonStr)
+	logger.Info("JWT_USERS_FILE_PATH: " + jwtUsersFilePath)
 
 	beaconNodeURLs := map[types.Network]string{
 		types.Mainnet: beaconMainnet,
@@ -91,5 +97,6 @@ func GetConfig() (*Config, error) {
 		LogLevel:          logLevel,
 		BeaconNodeURLs:    beaconNodeURLs,
 		MaxEntriesPerBson: MaxEntriesPerBson,
+		JWTUsersFilePath:  jwtUsersFilePath,
 	}, nil
 }

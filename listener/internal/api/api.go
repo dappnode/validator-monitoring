@@ -18,16 +18,18 @@ type httpApi struct {
 	dbCollection      *mongo.Collection
 	beaconNodeUrls    map[types.Network]string
 	maxEntriesPerBson int
+	jwtUsersFilePath  string
 }
 
 // create a new api instance
-func NewApi(port string, dbClient *mongo.Client, dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string, maxEntriesPerBson int) *httpApi {
+func NewApi(port string, dbClient *mongo.Client, dbCollection *mongo.Collection, beaconNodeUrls map[types.Network]string, maxEntriesPerBson int, jwtUsersFilePath string) *httpApi {
 	return &httpApi{
 		port:              port,
 		dbClient:          dbClient,
 		dbCollection:      dbCollection,
 		beaconNodeUrls:    beaconNodeUrls,
 		maxEntriesPerBson: maxEntriesPerBson,
+		jwtUsersFilePath:  jwtUsersFilePath,
 	}
 }
 
@@ -41,7 +43,7 @@ func (s *httpApi) Start() {
 
 	s.server = &http.Server{
 		Addr:    ":" + s.port,
-		Handler: routes.SetupRouter(s.dbCollection, s.beaconNodeUrls, s.maxEntriesPerBson),
+		Handler: routes.SetupRouter(s.dbCollection, s.beaconNodeUrls, s.maxEntriesPerBson, s.jwtUsersFilePath),
 	}
 
 	// ListenAndServe returns ErrServerClosed to indicate that the server has been shut down when the server is closed gracefully. We need to
