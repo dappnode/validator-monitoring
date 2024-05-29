@@ -11,6 +11,7 @@ services:
     volumes:
       - ./listener/cmd:/app/cmd
       - ./listener/internal:/app/internal
+      - ./jwt:/app/jwt  
     networks:
       dncore_network:
         aliases:

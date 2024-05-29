@@ -3,6 +3,7 @@ module github.com/dappnode/validator-monitoring/listener
 go 1.22.0
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/mux v1.8.1
 	github.com/herumi/bls-eth-go-binary v1.35.0
 	github.com/robfig/cron v1.2.0
