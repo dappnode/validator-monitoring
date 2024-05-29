@@ -69,10 +69,13 @@ func GetConfig() (*Config, error) {
 		return nil, fmt.Errorf("MAX_ENTRIES_PER_BSON is not a valid integer")
 	}
 
-	jwtUsersFilePath := os.Getenv("JWT_USERS_FILE_PATH")
-	if jwtUsersFilePath == "" {
-		return nil, fmt.Errorf("JWT_USERS_FILE_PATH is not set")
+	jwtUsersFileName := os.Getenv("JWT_USERS_FILE")
+	if jwtUsersFileName == "" {
+		return nil, fmt.Errorf("JWT_USERS_FILE is not set")
 	}
+	// we are hardcoding /app/jwt inside the container. This is because docker-compose has a bind mount hardcoded
+	// to that same path (./jwt:/app/jwt). Any changes here should be reflected in docker-compose.yml
+	jwtUsersFilePath := "/app/jwt/" + jwtUsersFileName
 
 	logger.Info("LOG_LEVEL: " + logLevel)
 	logger.Info("API_PORT: " + apiPort)

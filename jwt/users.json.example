@@ -1,0 +1,6 @@
+{
+    "stader": {
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq81M9pHCZEExzJFgWEXK\navIs0AexsLlP6CIGkbvfe/GX+kIjP28kkXYGCJlUuVhGYa8wU2mBYeXTbtvi9OR9\ndmKTOzsl3QzIKVd5BqXqbTmQxGp0S6ShujK6LHTOELxwYhFKulx2ls2DSyXhqOGx\nyh0Gm/3H7CiCgNHMJWUUiy5Xyp71vtimzDM+OniUVQE/ZjPg5WG+cM536Ms8XcK1\nNIN0z8ovgAibHqw8jEljxM89Sn9XD3mQo8kBTG+3dLsjUbHZDiJZogNgeXsOrM7m\nh3YtIwMvr5YEWUR7ON7ST5Wrwx14uF6YDE0yo6nb/cmmSSUJ/cdX36dNK3dGrYhB\nywIDAQAB\n-----END PUBLIC KEY-----",
+        "tags": ["solo"]
+    }
+}

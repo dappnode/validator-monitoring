@@ -14,13 +14,13 @@ services:
       BEACON_NODE_URL_LUKSO: ${BEACON_NODE_URL_LUKSO}
       BEACON_NODE_URL_GNOSIS: ${BEACON_NODE_URL_GNOSIS}
       MAX_ENTRIES_PER_BSON: ${MAX_ENTRIES_PER_BSON}
-      JWT_USERS_FILE_PATH: ${JWT_USERS_FILE_PATH}
+      JWT_USERS_FILE: ${JWT_USERS_FILE}
     depends_on:
       - mongo
     container_name: listener
     restart: always
     volumes:
-      - ./jwt:/app/jwt  
+      - ./jwt:/app/jwt ## listener expects /app/jwt to exist, careful when changing this path
   ui:
     build:
       context: ui
