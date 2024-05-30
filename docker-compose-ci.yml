@@ -24,6 +24,8 @@ services:
       - ./jwt:/app/jwt ## listener expects /app/jwt to exist, careful when changing this path
     networks:
       - listener-net-ci
+    ports:
+      - "8080:${API_PORT}"
 
   mongo:
     build:

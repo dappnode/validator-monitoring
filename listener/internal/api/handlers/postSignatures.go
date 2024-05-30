@@ -19,6 +19,20 @@ func PostSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.
 	logger.Debug("Received new POST '/signatures' request")
 	var requests []types.SignatureRequest
 
+	// Check if dbCollection is nil, just in case
+	if dbCollection == nil {
+		logger.Error("Database collection is nil")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if beaconNodeUrls is nil, just in case
+	if beaconNodeUrls == nil {
+		logger.Error("Beacon node URLs is nil")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	// Get network from query parameter
 	networkVar := r.URL.Query().Get("network")
 	if networkVar == "" {
@@ -39,14 +53,26 @@ func PostSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.
 		return
 	}
 
+	if len(requests) == 0 {
+		logger.Error("No valid requests in payload")
+		respondError(w, http.StatusBadRequest, "No requests in payload")
+		return
+	}
+
+	// Process each request and validate
 	requestsValidatedAndDecoded, err := validation.ValidateAndDecodeRequests(requests)
-	if err != nil || len(requestsValidatedAndDecoded) == 0 {
+	if err != nil {
 		logger.Error("Failed to validate and decode requests: " + err.Error())
 		respondError(w, http.StatusBadRequest, "No valid requests")
 		return
 	}
+	if len(requestsValidatedAndDecoded) == 0 {
+		logger.Error("All signature requests are invalid after decoding")
+		respondError(w, http.StatusBadRequest, "No valid requests")
+		return
+	}
 
-	// Get active validators
+	// Get active validators and process signatures
 	pubkeys := getPubkeys(requestsValidatedAndDecoded)
 	validatorsStatusMap, err := validation.GetValidatorsStatus(pubkeys, beaconNodeUrl)
 	if err != nil {
@@ -55,7 +81,6 @@ func PostSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.
 		return
 	}
 
-	// Filter and verify signatures
 	validSignatures := filterAndVerifySignatures(requestsValidatedAndDecoded, validatorsStatusMap)
 	if len(validSignatures) == 0 {
 		respondError(w, http.StatusBadRequest, "No valid signatures")
