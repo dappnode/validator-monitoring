@@ -53,6 +53,7 @@ func TestPostSignaturesIntegration(t *testing.T) {
 	invalidPayload := base64.StdEncoding.EncodeToString(invalidPayloadBytes)
 
 	// Define test cases
+	// TODO: we should add the expected message for each case too, besides the expected code
 	tests := []struct {
 		description  string
 		payload      string

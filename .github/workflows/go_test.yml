@@ -20,10 +20,16 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v3
 
-    - name: Build
+    - name: Build listener
       run: |
         cd ./listener
         go build -a -installsuffix cgo -o bin/listener ./cmd/listener
+
+    - name: Build jwt-generator
+      run: |
+        cd ./listener
+        go build -a -installsuffix cgo -o bin/jwt-generator ./cmd/jwt-generator
+
     - name: Setup Integration Test Environment
       run: |
         docker compose -f docker-compose-ci.yml up --build -d
