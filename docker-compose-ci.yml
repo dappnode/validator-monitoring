@@ -15,7 +15,7 @@ services:
     env_file:
       - ci.env
     environment:
-      MONGO_DB_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:${MONGO_DB_API_PORT}"
+      MONGO_DB_URI: "mongodb://dappnode:dappnode@mongo:27017"
     depends_on:
       - mongo
     container_name: listener
