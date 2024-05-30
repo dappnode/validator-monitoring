@@ -25,6 +25,10 @@ jobs:
         cd ./listener
         go build -a -installsuffix cgo -o bin/listener ./cmd/listener
 
+    - name: Setup Integration Test Environment
+        run: |
+          docker compose -f docker-compose-ci.yml up --build -d
+
     - name: Test
       run: |
         cd ./listener

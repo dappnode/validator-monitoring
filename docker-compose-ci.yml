@@ -1,0 +1,37 @@
+version: "3.9"
+
+networks:
+  listener-net-ci:
+    driver: bridge
+
+volumes:
+  mongo_data_ci: {}
+
+services:
+  listener:
+    build:
+      context: listener
+      dockerfile: Dockerfile
+    env_file:
+      - ci.env
+    depends_on:
+      - mongo
+    container_name: listener
+    restart: always
+    volumes:
+      - ./jwt:/app/jwt ## listener expects /app/jwt to exist, careful when changing this path
+    networks:
+      - listener-net-ci
+
+  mongo:
+    build:
+      context: mongo
+    volumes:
+      - mongo_data_ci:/data/db
+    env_file:
+      - ci.env
+    command: ["mongod", "--config", "/etc/mongo/mongod.conf"]
+    container_name: mongo
+    restart: always
+    networks:
+      - listener-net-ci
