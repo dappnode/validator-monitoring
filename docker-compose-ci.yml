@@ -25,7 +25,7 @@ services:
     networks:
       - listener-net-ci
     ports:
-      - "8080:${API_PORT}"
+      - "8080:8080" # should be same as API_PORT of ci.env
 
   mongo:
     build:
