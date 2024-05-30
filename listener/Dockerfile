@@ -1,5 +1,5 @@
 # Start from the latest golang base image
-FROM golang:1.22.0-alpine3.19 as builder
+FROM golang:1.22.3 as builder
 
 # Set the Current Working Directory inside the container.
 WORKDIR /app
@@ -14,7 +14,7 @@ COPY internal/ ./internal/
 COPY cmd/ ./cmd/
 
 # Build the application, outputting the executable to /bin directory.
-RUN CGO_ENABLED=0 GOOS=linux go build -v -o /bin/listener ./cmd/listener/main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -v -o /bin/listener ./cmd/listener/main.go
 
 # Use a Docker multi-stage build to create a lean production image.
 # # build-essential required by dependency github.com/herumi/bls-eth-go-binary
