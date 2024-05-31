@@ -1,6 +1,5 @@
 .env
 ./listener/tmp/*
 ./listener/bin/*
-jwt
 private.pem
 public.pem
