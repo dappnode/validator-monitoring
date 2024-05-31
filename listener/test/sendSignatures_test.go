@@ -108,7 +108,7 @@ func TestPostSignaturesIntegration(t *testing.T) {
 			pubkey:       publicKeyHex,
 			signature:    validSignature,
 			tag:          "invalidTag",
-			expectedCode: http.StatusOK,
+			expectedCode: http.StatusBadRequest,
 		},
 	}
 

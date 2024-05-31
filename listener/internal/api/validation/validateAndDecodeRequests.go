@@ -47,6 +47,24 @@ func isValidCodedRequest(req *types.SignatureRequest) bool {
 		return false
 	}
 
+	// Define a map for quick lookup of valid tags.
+	validTags := map[types.Tag]bool{
+		types.Obol:       true,
+		types.Diva:       true,
+		types.Ssv:        true,
+		types.Rocketpool: true,
+		types.Stakewise:  true,
+		types.Stakehouse: true,
+		types.Solo:       true,
+		types.Stader:     true,
+	}
+
+	// If the req.tag is not true, it's invalid
+	if _, ok := validTags[req.Tag]; !ok {
+		logger.Debug("Received Invalid Request: Invalid tag.")
+		return false
+	}
+
 	// Check if the signature format is correct (should start with '0x' and be 194 characters long)
 	if len(req.Signature) != 194 || req.Signature[:2] != "0x" {
 		logger.Debug("Received Invalid Request: Signature format is incorrect.")
