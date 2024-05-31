@@ -19,20 +19,6 @@ func PostSignatures(w http.ResponseWriter, r *http.Request, dbCollection *mongo.
 	logger.Debug("Received new POST '/signatures' request")
 	var requests []types.SignatureRequest
 
-	// Check if dbCollection is nil, just in case
-	if dbCollection == nil {
-		logger.Error("Database collection is nil")
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	// Check if beaconNodeUrls is nil, just in case
-	if beaconNodeUrls == nil {
-		logger.Error("Beacon node URLs is nil")
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
 	// Get network from query parameter
 	networkVar := r.URL.Query().Get("network")
 	if networkVar == "" {
