@@ -1,5 +1,4 @@
 .env
 ./listener/tmp/*
 ./listener/bin/*
-private.pem
-public.pem
+
