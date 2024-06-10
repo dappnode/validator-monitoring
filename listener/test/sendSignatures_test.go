@@ -3,7 +3,6 @@ package test
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -49,16 +48,7 @@ func TestPostSignaturesIntegration(t *testing.T) {
 	currentTime := time.Now().UnixMilli()
 	secretKey := setupSecretKey()
 	secretKey2 := setupSecretKey()
-	// Get the current working directory
-	dir, err := os.Getwd()
-	if err != nil {
-		// Handle the error if getting the working directory fails
-		fmt.Println("Error:", err)
-		return
-	}
 
-	// Print the current working directory
-	fmt.Println("Current directory:", dir)
 	// Read JWT token from file
 	jwtToken, err := readJWT("data/token.jwt")
 	if err != nil {
