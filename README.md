@@ -2,31 +2,30 @@
 
 ## Description
 
-This repository contains the code for the validator monitoring system. The system is designed to listen signatures request from different networks validate them and store the results in a database.
+This repository hosts the code for a validator monitoring system designed to receive, validate, and store signatures from various networks. It includes a JWT generator for easy token generation required for API access
+to certain endpoints.
 
-It also contains a simple JWT generator that can be used to easily generate the JWT token necessary to access some API endpoints. More on this on the [API](#api) section.
+**Workflow in Dappnode:**
+1. Dappnode's [Staking Brain](https://github.com/dappnode/StakingBrain) sends a `PROOF_OF_VALIDATION` signature request to the web3signer. [Details on the format and integration here](https://github.com/Consensys/web3signer/pull/982).
+2. The Staking Brain wraps web3signer's response in a `SignatureRequest` object and sends it to the monitoring system defined in this repo.
+3. The signature is then validated and stored in a MongoDB database by the monitoring system defined in this repo.
 
-In dappnode, the signature request and validation flow is as follows:
+A `SignatureRequest` object has the following format:
 
-**1.** The staking brain sends the signature request of type `PROOF_OF_VALIDATION` to the web3signer (see <https://github.com/Consensys/web3signer/pull/982>). The request has the following format:
-
-```json
-{
-  "type": "PROOF_OF_VALIDATION",
-  "platform": "dappnode",
-  "timestamp": "1711338489397"
+```go
+type SignatureRequest struct {
+ Payload   string `json:"payload"`
+ Pubkey    string `json:"pubkey"`
+ Signature string `json:"signature"`
+ Tag       Tag    `json:"tag"`
 }
 ```
-
-**2.** The web3signer answers with the `PROOF_OF_VALIDATION` signature. Its important to notice that the order of the items in the JSON matters.
-
-**3.** The staking brain sends back all the `PROOF_OF_VALIDATION` signatures to the the signatures monitoring system. The listener will validate the requests, the validators and the signatures and finally store the result into a mongo db.
 
 ##  API
 
 - `/signatures?network=<network>`:
-  - `POST`: TODO
-  - `GET`: TODO
+  - `POST`: Sends an array of signatures to be validated and stored in the database. The request body must be a non empty array of "SignatureRequest" objects.
+  - `GET`: Returns all signatures stored in the the database for which the user has access to. More on this on the [Authentication](#authentication) section.
 
 ### Authentication
 
@@ -40,7 +39,7 @@ Bearer <JWT token>
 
 To access the `GET /signatures` endpoint, the JWT must meet the following criteria:
 
-- **Key ID** (`kid`): The JWT must include a kid claim in the header. It will be used to identify which public key to use to verify the signature.
+- **Key ID** (`kid`): The JWT must include a kid claim in the header. The kid must be whitelisted in the monitoring system, and will be used to identify the pubkey used to verify the JWT signature.
 
 As a nice to have, the JWT can also include the following claims as part of the payload:
 
@@ -63,14 +62,14 @@ Once you have the private key, you can generate a JWT token using the `jwt-gener
     ./jwt-generator --private-key=path/to/private.pem --kid=your_kid_here --exp=24h --output=path/to/output.jwt
 ```
 
-Only JWT tokens with whitelisted "kid" and pubkey will be accepted. Please contact the dappnode team for more information on this.
+Note: Contact the dappnode team to whitelist your JWT "kid" and public key.
 
-##  Validation
+##  Validation Process
 
 The process of validating the request and the signature follows the next steps:
 
 1. Get network query parameter from the request: it is mandatory and must be one of "mainnet", "holesy", "gnosis", "lukso".
-2. Decode and validate the request. The request body must have the following format:
+2. Decode and validate the request. The request body must be an array of SignatureRequest objects. Each object must have the following format:
 
 ```go
 type SignatureRequest struct {
